@@ -1,19 +1,21 @@
 /* eslint-disable no-var */
 var webpack = require( 'webpack' );
 var path = require( 'path' );
+var HtmlWebpackPlugin = require( 'html-webpack-plugin' );
 
-var parentDir = path.join( __dirname, '../' );
+var parentDir = path.join( __dirname, '../client/' );
 
 module.exports = {
-    entry: [
-        path.join( parentDir, 'app/app.js' )
-    ],
+    entry: {
+        app: './client/app.js'
+    },
+    devtool: 'eval-source-map',
     module: {
         rules: [
             {
                 test: /\.(js|jsx)$/,
                 exclude: /node_modules/,
-                use:['babel-loader']
+                use: ['babel-loader']
             },
             {
                 test: /\.js$/,
@@ -78,10 +80,12 @@ module.exports = {
     },
     output: {
         path: `${parentDir}dist`,
-        publicPath: '/',
         filename: 'bundle.js'
     },
     plugins: [
+        new HtmlWebpackPlugin({
+            template: 'client/index.html'
+        }),
         new webpack.HotModuleReplacementPlugin()
     ],
     devServer: {

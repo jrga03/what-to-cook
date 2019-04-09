@@ -4,7 +4,13 @@ const path = require('path');
 module.exports = {
     parser: 'babel-eslint',
     extends: ['airbnb', 'prettier', 'prettier/react'],
-    plugins: ['prettier', 'redux-saga', 'react', 'jsx-a11y'],
+    plugins: [
+        'prettier',
+        'redux-saga',
+        'react',
+        'jsx-a11y',
+        'react-hooks'
+    ],
     env: {
         jest: true,
         browser: true,
@@ -114,7 +120,9 @@ module.exports = {
             }
         ],
         'semi-spacing': ['error', { before: false, after: true }],
-        'space-in-parens': ['error', 'always', { exceptions: ['{}', '[]', '()', 'empty'] }]
+        'space-in-parens': ['error', 'always', { exceptions: ['{}', '[]', '()', 'empty'] }],
+        'react-hooks/rules-of-hooks': 'error',
+        'react-hooks/exhaustive-deps': 'warn'
     },
     // settings: {
     //     'import/resolver': {
