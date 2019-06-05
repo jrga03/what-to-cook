@@ -6,6 +6,7 @@ var HtmlWebpackPlugin = require( 'html-webpack-plugin' );
 var parentDir = path.join( __dirname, '../client/' );
 
 module.exports = {
+    mode: 'development',
     entry: {
         app: './client/app.js'
     },
