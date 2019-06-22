@@ -1,0 +1,30 @@
+{
+    "name": "what-to-cook",
+    "version": "1.0.0",
+    "description": "Helps decide what to cook",
+    "main": "./client/src/index.html",
+    "scripts": {
+        "start": "cross-env NODE_ENV=development nodemon server.js --ignore ../client"
+    },
+    "repository": {
+        "type": "git",
+        "url": "git+https://github.com/jrga03/what-to-cook.git"
+    },
+    "author": "Jason Acido",
+    "license": "ISC",
+    "bugs": {
+        "url": "https://github.com/jrga03/what-to-cook/issues"
+    },
+    "homepage": "https://github.com/jrga03/what-to-cook#readme",
+    "dependencies": {
+        "connect-mongo": "2.0.3",
+        "express": "4.16.4",
+        "express-graphql": "0.7.1",
+        "express-session": "1.15.6",
+        "graphql": "14.1.1",
+        "mongoose": "5.4.19"
+    },
+    "devDependencies": {
+        "cross-env": "5.2.0"
+    }
+}

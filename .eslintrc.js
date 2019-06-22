@@ -6,7 +6,6 @@ module.exports = {
     extends: ['airbnb', 'prettier', 'prettier/react'],
     plugins: [
         'prettier',
-        'redux-saga',
         'react',
         'jsx-a11y',
         'react-hooks'
@@ -105,8 +104,6 @@ module.exports = {
         'react/require-extension': 0,
         'react/self-closing-comp': 0,
         'react/sort-comp': 0,
-        'redux-saga/no-yield-in-race': 2,
-        'redux-saga/yield-effects': 2,
         'require-yield': 0,
         'require-jsdoc': [
             'error',
@@ -124,11 +121,11 @@ module.exports = {
         'react-hooks/rules-of-hooks': 'error',
         'react-hooks/exhaustive-deps': 'warn'
     },
-    // settings: {
-    //     'import/resolver': {
-    //         webpack: {
-    //             config: './internals/webpack/webpack.prod.babel.js'
-    //         }
-    //     }
-    // }
+    settings: {
+        'import/resolver': {
+            webpack: {
+                config: './config/webpack.dev.config.js'
+            }
+        }
+    }
 };

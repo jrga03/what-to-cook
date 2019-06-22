@@ -1,5 +1,4 @@
 /* eslint-disable import/order */
-/* eslint-disable no-unused-vars */
 const express = require( 'express' );
 const models = require( './models' );
 const expressGraphQL = require( 'express-graphql' );
@@ -7,13 +6,19 @@ const mongoose = require( 'mongoose' );
 const session = require( 'express-session' );
 const MongoStore = require( 'connect-mongo' )( session );
 const schema = require( './schema/schema' );
+const path = require( 'path' );
 
 // Create a new Express application
 const app = express();
+app.use( express.static( path.join( __dirname, 'build' )));
+
+const DB_USER = 'jason';
+const DB_PASSWORD = '123qweasd';
+const DB_SECRET = 'aaabbbccc';
 
 // Replace with your mongoLab URI
 // const MONGO_URI = 'mongodb+srv://jason:123qweasd@cluster0-fbf2a.gcp.mongodb.net/whattocookdb?retryWrites=true';
-const MONGO_URI = 'mongodb://jason:123qweasd@cluster0-shard-00-00-fbf2a.gcp.mongodb.net:27017,cluster0-shard-00-01-fbf2a.gcp.mongodb.net:27017,cluster0-shard-00-02-fbf2a.gcp.mongodb.net:27017/whattocookdb?ssl=true&replicaSet=Cluster0-shard-0&authSource=admin&retryWrites=true';
+const MONGO_URI = `mongodb://${DB_USER}:${DB_PASSWORD}@cluster0-shard-00-00-fbf2a.gcp.mongodb.net:27017,cluster0-shard-00-01-fbf2a.gcp.mongodb.net:27017,cluster0-shard-00-02-fbf2a.gcp.mongodb.net:27017/whattocookdb?ssl=true&replicaSet=Cluster0-shard-0&authSource=admin&retryWrites=true`;
 
 // Mongoose's built in promise library is deprecated, replace it with ES2015 Promise
 mongoose.Promise = global.Promise;
@@ -33,7 +38,7 @@ mongoose.connection
 app.use( session({
     resave: true,
     saveUninitialized: true,
-    secret: 'aaabbbccc',
+    secret: DB_SECRET,
     store: new MongoStore({
         url: MONGO_URI,
         autoReconnect: true
@@ -47,12 +52,11 @@ app.use( '/graphql', expressGraphQL({
     graphiql: true
 }));
 
-// Webpack runs as a middleware. If any request comes in for the root route ('/')
-// Webpack will respond with the output of the webpack process: an HTML file and
-// a single bundle.js output of all of our client side Javascript
-const webpackMiddleware = require( 'webpack-dev-middleware' );
-const webpack = require( 'webpack' );
-const webpackConfig = require( '../webpack/webpack.dev.config.js' );
-app.use( webpackMiddleware( webpack( webpackConfig )));
+app.get( '/*', function ( req, res ) {
+    res.sendFile( path.join( __dirname, 'build', 'index.html' ));
+});
 
-module.exports = app;
+const PORT = 4000;
+app.listen( PORT, () => {
+    console.log( `Listening to port ${PORT}` );
+});
