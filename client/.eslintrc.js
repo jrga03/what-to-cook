@@ -120,12 +120,5 @@ module.exports = {
         'space-in-parens': ['error', 'always', { exceptions: ['{}', '[]', '()', 'empty'] }],
         'react-hooks/rules-of-hooks': 'error',
         'react-hooks/exhaustive-deps': 'warn'
-    },
-    settings: {
-        'import/resolver': {
-            webpack: {
-                config: './config/webpack.dev.config.js'
-            }
-        }
     }
 };
