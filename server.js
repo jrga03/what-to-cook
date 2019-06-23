@@ -48,7 +48,7 @@ app.use( '/graphql', expressGraphQL({
     graphiql: true
 }));
 
-app.get( '/*', function ( req, res ) {
+app.use( '/*', function ( req, res ) {
     res.sendFile( path.join( __dirname, 'client', 'build', 'index.html' ));
 });
 
