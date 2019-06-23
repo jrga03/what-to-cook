@@ -1,5 +1,7 @@
 /* eslint-disable import/order */
-require('dotenv').config();
+if ( process.env.NODE_ENV !== 'production' ) {
+    require('dotenv').config();
+}
 const express = require( 'express' );
 const models = require( './models' );
 const expressGraphQL = require( 'express-graphql' );
@@ -44,7 +46,7 @@ app.use( session({
 // to the GraphQL instance.
 app.use( '/graphql', expressGraphQL({
     schema,
-    graphiql: true
+    graphiql: process.env.NODE_ENV !== 'production'
 }));
 
 app.use( express.static( path.join( __dirname, 'client/build' )));
