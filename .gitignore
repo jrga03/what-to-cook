@@ -4,7 +4,7 @@
 node_modules
 /.pnp
 .pnp.js
-.env
+/.env
 
 # testing
 coverage
@@ -26,4 +26,5 @@ yarn-error.log*
 
 # local
 client2
+client_3
 /config

@@ -14,7 +14,6 @@ const MONGO_URI = process.env.MONGO_URI;
 
 // Create a new Express application
 const app = express();
-app.use( express.static( path.join( __dirname, 'client', 'build' )));
 
 // Mongoose's built in promise library is deprecated, replace it with ES2015 Promise
 mongoose.Promise = global.Promise;
@@ -48,8 +47,9 @@ app.use( '/graphql', expressGraphQL({
     graphiql: true
 }));
 
-app.use( '/*', function ( req, res ) {
-    res.sendFile( path.join( __dirname, 'client', 'build', 'index.html' ));
+app.use( express.static( path.join( __dirname, 'client/build' )));
+app.get( '*', function ( req, res ) {
+    res.sendFile( path.join( __dirname, 'client/build/index.html' ));
 });
 
 module.exports = app;
