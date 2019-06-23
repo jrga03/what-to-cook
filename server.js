@@ -1,4 +1,5 @@
 /* eslint-disable import/order */
+require('dotenv').config();
 const express = require( 'express' );
 const models = require( './models' );
 const expressGraphQL = require( 'express-graphql' );
@@ -8,17 +9,12 @@ const MongoStore = require( 'connect-mongo' )( session );
 const schema = require( './schema/schema' );
 const path = require( 'path' );
 
+const SESSION_SECRET = process.env.SESSION_SECRET;
+const MONGO_URI = process.env.MONGO_URI;
+
 // Create a new Express application
 const app = express();
-app.use( express.static( path.join( __dirname, 'build' )));
-
-const DB_USER = 'jason';
-const DB_PASSWORD = '123qweasd';
-const DB_SECRET = 'aaabbbccc';
-
-// Replace with your mongoLab URI
-// const MONGO_URI = 'mongodb+srv://jason:123qweasd@cluster0-fbf2a.gcp.mongodb.net/whattocookdb?retryWrites=true';
-const MONGO_URI = `mongodb://${DB_USER}:${DB_PASSWORD}@cluster0-shard-00-00-fbf2a.gcp.mongodb.net:27017,cluster0-shard-00-01-fbf2a.gcp.mongodb.net:27017,cluster0-shard-00-02-fbf2a.gcp.mongodb.net:27017/whattocookdb?ssl=true&replicaSet=Cluster0-shard-0&authSource=admin&retryWrites=true`;
+app.use( express.static( path.join( __dirname, 'client', 'build' )));
 
 // Mongoose's built in promise library is deprecated, replace it with ES2015 Promise
 mongoose.Promise = global.Promise;
@@ -38,7 +34,7 @@ mongoose.connection
 app.use( session({
     resave: true,
     saveUninitialized: true,
-    secret: DB_SECRET,
+    secret: SESSION_SECRET,
     store: new MongoStore({
         url: MONGO_URI,
         autoReconnect: true
@@ -53,10 +49,7 @@ app.use( '/graphql', expressGraphQL({
 }));
 
 app.get( '/*', function ( req, res ) {
-    res.sendFile( path.join( __dirname, 'build', 'index.html' ));
+    res.sendFile( path.join( __dirname, 'client', 'build', 'index.html' ));
 });
 
-const PORT = 4000;
-app.listen( PORT, () => {
-    console.log( `Listening to port ${PORT}` );
-});
+module.exports = app;

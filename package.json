@@ -2,10 +2,12 @@
     "name": "what-to-cook",
     "version": "1.0.0",
     "description": "Helps decide what to cook",
-    "main": "./client/src/index.html",
+    "main": "index.js",
+    "private": true,
     "scripts": {
-        "start": "concurrently \"cd client && npm run start\" \"cd server && npm run start\"",
-        "build": ""
+        "start": "node server.js",
+        "start:dev": "concurrently \"cd client && npm run start\" \"cross-env NODE_ENV=development nodemon index.js --ignore ./client\"",
+        "heroku-postbuild": "cd client && npm install --only=dev && npm install && npm run build"
     },
     "repository": {
         "type": "git",
@@ -16,5 +18,20 @@
     "bugs": {
         "url": "https://github.com/jrga03/what-to-cook/issues"
     },
-    "homepage": "https://github.com/jrga03/what-to-cook#readme"
+    "homepage": "https://github.com/jrga03/what-to-cook#readme",
+    "dependencies": {
+        "connect-mongo": "2.0.3",
+        "express": "4.16.4",
+        "express-graphql": "0.7.1",
+        "express-session": "1.15.6",
+        "graphql": "14.1.1",
+        "mongoose": "5.4.19"
+    },
+    "devDependencies": {
+        "cross-env": "5.2.0",
+        "dotenv": "8.0.0"
+    },
+    "engines": {
+        "node": "10.16.0"
+    }
 }
