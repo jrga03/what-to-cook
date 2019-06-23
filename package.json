@@ -7,7 +7,7 @@
     "scripts": {
         "start": "node index.js",
         "start:dev": "concurrently \"cd client && npm run start\" \"cross-env NODE_ENV=development nodemon index.js --ignore ./client\"",
-        "heroku-postbuild": "cd client && npm install --only=dev --save-exact && npm install --save-exact && npm run build"
+        "heroku-postbuild": "npm install --save-exact && cd client && npm install --only=dev --save-exact && npm install --save-exact && npm run build"
     },
     "repository": {
         "type": "git",
