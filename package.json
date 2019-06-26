@@ -6,7 +6,7 @@
     "private": true,
     "scripts": {
         "start": "node index.js",
-        "start:dev": "concurrently \"cd client && npm run start\" \"cross-env NODE_ENV=development nodemon index.js --ignore ./client\"",
+        "dev": "concurrently \"cd client && npm run start\" \"cross-env NODE_ENV=development nodemon index.js --ignore ./client\"",
         "heroku-postbuild": "npm install --save-exact && cd client && npm install --only=dev --save-exact && npm install --save-exact && npm run build"
     },
     "repository": {
@@ -25,7 +25,8 @@
         "express-graphql": "0.7.1",
         "express-session": "1.15.6",
         "graphql": "14.1.1",
-        "mongoose": "5.4.19"
+        "mongoose": "5.4.19",
+        "react-device-detect": "1.6.2"
     },
     "devDependencies": {
         "cross-env": "5.2.0",
