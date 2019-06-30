@@ -70,7 +70,7 @@ export const DrawerContentContainer = styled.div`
         width: 100%;
     }
 
-    button:first-child {
+    button:not(:nth-child(2)) {
         display: flex;
         justify-content: flex-start;
     }

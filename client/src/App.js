@@ -1,16 +1,32 @@
-import React from 'react';
+/* eslint-disable import/no-unresolved */
+import React, { lazy, Suspense } from 'react';
 import { BrowserRouter } from 'react-router-dom';
 
-import App from 'containers/App';
+const Loading = (
+    <div
+        style={{
+            height: '100vh',
+            fontSize: '2rem',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center'
+        }}
+    >
+        Loading...
+    </div>
+);
+const App = lazy(() => import( 'containers/App' ));
 
 /**
  * Root
  */
 function Root() {
     return (
-        <BrowserRouter>
-            <App />
-        </BrowserRouter>
+        <Suspense fallback={ Loading }>
+            <BrowserRouter>
+                <App />
+            </BrowserRouter>
+        </Suspense>
     );
 }
 

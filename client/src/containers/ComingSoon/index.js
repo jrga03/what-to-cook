@@ -4,13 +4,13 @@ import Typography from '@material-ui/core/Typography';
 import { Wrapper } from 'containers/App'; // eslint-disable-line
 
 /**
- * Not Found Page
+ * Coming Soon page
  */
-export default function NotFoundPage() {
+export default function ComingSoonPage() {
     return (
         <Wrapper>
             <Typography variant="h4">
-                Page Not Found
+                Coming soon!
             </Typography>
         </Wrapper>
     );

@@ -1,6 +1,6 @@
 import React, { useState, useRef } from 'react';
 import PropTypes from 'prop-types';
-import { NavLink } from 'react-router-dom';
+import { NavLink, withRouter } from 'react-router-dom';
 import SwipeableDrawer from '@material-ui/core/SwipeableDrawer';
 import Popper from '@material-ui/core/Popper';
 import Grow from '@material-ui/core/Grow';
@@ -65,20 +65,30 @@ function MobileHeader ({
     open,
     onClickSurpriseMe,
     recipesButtonRef,
-    recipeListToggle
-    // addRecipe
+    recipeListToggle,
+    addRecipe
 }) {
     const [ openDrawer, toggleDrawer ] = useState( false );
 
     /**
      * Handles drawer toggle
      * @param {Boolean} [state] - State of drawer
+     * @returns {Function}
      */
     function handleToggleDrawer( state ) {
         if ( state !== undefined ) {
             return () => toggleDrawer( state );
         }
         return () => toggleDrawer(( prevStatus ) => !prevStatus );
+    }
+
+    /**
+     * Click Add Recipe handler
+     * @returns {Function}
+     */
+    function onClickAdd() {
+        addRecipe();
+        toggleDrawer( false );
     }
 
     return (
@@ -108,6 +118,9 @@ function MobileHeader ({
                     <Collapse in={ open } timeout="auto">
                         { renderMenuList({ onClickItem: handleToggleDrawer( false ) }) }
                     </Collapse>
+                    <Button onClick={ onClickAdd }>
+                        Add a Recipe
+                    </Button>
                     <div />
                 </DrawerContentContainer>
             </SwipeableDrawer>
@@ -119,8 +132,8 @@ MobileHeader.propTypes = {
     open: PropTypes.bool.isRequired,
     onClickSurpriseMe: PropTypes.func.isRequired,
     recipesButtonRef: PropTypes.object.isRequired,
-    recipeListToggle: PropTypes.func.isRequired
-    // addRecipe: PropTypes.func.isRequired
+    recipeListToggle: PropTypes.func.isRequired,
+    addRecipe: PropTypes.func.isRequired
 };
 
 /**
@@ -194,7 +207,7 @@ DesktopHeader.propTypes = {
 /**
  * Header componnent
  */
-function Header () {
+function Header ({ history, location }) {
     const [ open, setOpen ] = useState( false );
     const anchorRef = useRef( null );
 
@@ -218,7 +231,11 @@ function Header () {
 
     const onClickSurpriseMe = () => console.log( 'SURPRISE!' );
 
-    const addRecipe = () => console.log( 'ADD' );
+    const addRecipe = () => {
+        if ( location.pathname !== '/recipe/add' ) {
+            history.push( '/recipe/add' );
+        }
+    };
 
     const headerProps = {
         open,
@@ -241,4 +258,9 @@ function Header () {
     );
 }
 
-export default Header;
+Header.propTypes = {
+    history: PropTypes.object,
+    location: PropTypes.object
+}
+
+export default withRouter( Header );
