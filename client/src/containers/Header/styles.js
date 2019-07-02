@@ -82,7 +82,7 @@ export const DrawerContentContainer = styled.div`
     }
 
     button {
-        margin-left: 5px;
+        padding-left: 13px;
     }
 
     ul {

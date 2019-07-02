@@ -7,6 +7,9 @@ import Typography from '@material-ui/core/Typography';
 import Bold from '@material-ui/icons/FormatBold'
 import Italic from '@material-ui/icons/FormatItalic'
 import Underlined from '@material-ui/icons/FormatUnderlined'
+import BlockQuote from '@material-ui/icons/FormatQuote'
+import Bulleted from '@material-ui/icons/FormatListBulleted'
+import Numbered from '@material-ui/icons/FormatListNumbered'
 
 const Container = styled.main`
     width: 100vw;
@@ -14,6 +17,7 @@ const Container = styled.main`
     display: flex;
     flex-direction: column;
     align-items: center;
+    padding-bottom: 50px;
 `;
 
 const TextFieldWrapper = styled.div`
@@ -40,11 +44,34 @@ const EditorWrapper = styled.div`
     .DraftEditor-root {
         min-height: 50vh;
     }
+
+    .RichEditor-blockquote {
+        border-left: 5px solid #eee;
+        color: #666;
+        font-weight: bold;
+        margin: 16px 0;
+        padding: 10px 20px;
+    }
+
+    .style-controls {
+        margin-left: 10px;
+    }
+
+    .block-type-container {
+        display: flex;
+        flex-wrap: wrap;
+
+        & > div {
+            margin-top: 10px;
+            margin-bottom: 10px;
+        }
+    }
 `;
 
 const StyleButtonSpan = styled.span`
     color: #999;
     margin-right: 16px;
+    margin-bottom: 16px;
     cursor: pointer;
 
     &.active {
@@ -52,7 +79,7 @@ const StyleButtonSpan = styled.span`
     }
 `;
 
-const StyleButton = ({ style, active, icon, onToggle }) => {
+const StyleButton = ({ style, active, label, icon, onToggle }) => {
     /**
      * Inline style on click handler
      */
@@ -68,17 +95,66 @@ const StyleButton = ({ style, active, icon, onToggle }) => {
             role="button"
             tabIndex={ 0 }
         >
-            { icon }
+            { icon || label }
         </StyleButtonSpan>
     );
 }
 
 StyleButton.propTypes = {
     style: PropTypes.string.isRequired,
-    icon: PropTypes.any.isRequired,
+    label: PropTypes.string.isRequired,
+    icon: PropTypes.element.isRequired,
     active: PropTypes.bool,
     onToggle: PropTypes.func.isRequired
 };
+
+const BLOCK_TYPES = [
+    [
+        { label: 'H1', style: 'header-one' },
+        { label: 'H2', style: 'header-two' },
+        { label: 'H3', style: 'header-three' },
+        { label: 'H4', style: 'header-four' },
+        { label: 'H5', style: 'header-five' },
+        { label: 'H6', style: 'header-six' }
+    ],
+    [
+        { label: 'Blockquote', style: 'blockquote', icon: <BlockQuote /> },
+        { label: 'UL', style: 'unordered-list-item', icon: <Bulleted /> },
+        { label: 'OL', style: 'ordered-list-item', icon: <Numbered /> }
+    ]
+]
+
+const BlockTypeButtons = ({ editorState, onToggle }) => {
+    const selection = editorState.getSelection();
+    const blockType = editorState
+        .getCurrentContent()
+        .getBlockForKey( selection.getStartKey())
+        .getType();
+
+    return (
+        <div className="style-controls block-type-container">
+            { BLOCK_TYPES.map(( row, index ) => (
+                <div key={ index }> { /* eslint-disable-line */ }
+                    { row.map(( type ) => (
+                        <StyleButton
+                            key={ type.label || type.style }
+                            active={ type.style === blockType }
+                            label={ type.label }
+                            icon={ type.icon }
+                            onToggle={ onToggle }
+                            style={ type.style }
+                        />
+                    )) }
+                </div>
+            )) }
+        </div>
+    );
+}
+
+BlockTypeButtons.propTypes = {
+    editorState: PropTypes.object.isRequired,
+    onToggle: PropTypes.func.isRequired
+}
 
 const INLINE_STYLES = [
     { label: 'Bold', style: 'BOLD', icon: <Bold /> },
@@ -90,7 +166,7 @@ const InlineStyleButtons = ({ editorState, onToggle }) => {
     const currentStyle = editorState.getCurrentInlineStyle();
 
     return (
-        <div>
+        <div className="style-controls">
             { INLINE_STYLES.map(( type ) => (
                 <StyleButton
                     key={ type.style }
@@ -107,6 +183,18 @@ const InlineStyleButtons = ({ editorState, onToggle }) => {
 InlineStyleButtons.propTypes = {
     editorState: PropTypes.object.isRequired,
     onToggle: PropTypes.func.isRequired
+}
+
+/**
+ * Block style getter
+ */
+function getBlockStyle( block ) {
+    switch ( block.getType()) {
+            case 'blockquote':
+                return 'RichEditor-blockquote';
+            default:
+                return null;
+    }
 }
 
 /**
@@ -138,6 +226,13 @@ function AddRecipe() {
             return 'handled';
         }
         return 'not-handled';
+    }
+
+    /**
+     * Handler for toggling block type
+     */
+    function onToggleBlockType( blockType ) {
+        setEditorState( RichUtils.toggleBlockType( editorState, blockType ));
     }
 
     /**
@@ -173,6 +268,7 @@ function AddRecipe() {
                 </Typography>
             </TextFieldWrapper>
             <EditorWrapper onClick={ onWrapperClick }>
+                <BlockTypeButtons editorState={ editorState } onToggle={ onToggleBlockType } />
                 <InlineStyleButtons editorState={ editorState } onToggle={ onToggleInlineStyle } />
                 <hr />
                 <Editor
@@ -183,6 +279,7 @@ function AddRecipe() {
                     handleKeyCommand={ handleKeyCommand }
                     handlePastedFiles={ ( files ) => console.log( files ) }
                     handleDroppedFiles={ ( files ) => console.log( files ) }
+                    blockStyleFn={ getBlockStyle }
                     ref={ editorRef }
                 />
             </EditorWrapper>

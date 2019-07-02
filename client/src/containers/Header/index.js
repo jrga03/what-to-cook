@@ -145,7 +145,8 @@ function DesktopHeader ({
     recipesButtonRef,
     recipeListToggle,
     recipeListClose,
-    addRecipe
+    addRecipe,
+    routeName
 }) {
     return (
         <>
@@ -188,9 +189,11 @@ function DesktopHeader ({
                 </Popper>
                 <div />
             </Container>
-            <Button onClick={ addRecipe }>
-                Add a Recipe
-            </Button>
+            { routeName !== '/recipe/add' && (
+                <Button onClick={ addRecipe }>
+                    Add a Recipe
+                </Button>
+            ) }
         </>
     );
 }
@@ -201,7 +204,8 @@ DesktopHeader.propTypes = {
     recipesButtonRef: PropTypes.object.isRequired,
     recipeListToggle: PropTypes.func.isRequired,
     recipeListClose: PropTypes.func.isRequired,
-    addRecipe: PropTypes.func.isRequired
+    addRecipe: PropTypes.func.isRequired,
+    routeName: PropTypes.string.isRequired
 };
 
 /**
@@ -243,7 +247,8 @@ function Header ({ history, location }) {
         recipesButtonRef: anchorRef,
         recipeListToggle: handleToggle,
         recipeListClose: handleClose,
-        addRecipe
+        addRecipe,
+        routeName: location.pathname
     };
 
     return (
