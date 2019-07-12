@@ -1,6 +1,13 @@
 /* eslint-disable import/no-unresolved */
 import React, { lazy, Suspense } from 'react';
 import { BrowserRouter } from 'react-router-dom';
+import ApolloClient from 'apollo-boost';
+import { ApolloProvider } from 'react-apollo';
+import { ApolloProvider as ApolloHooksProvider } from 'react-apollo-hooks';
+
+const client = new ApolloClient({
+    uri: "/graphql"
+});
 
 const Loading = (
     <div
@@ -24,7 +31,11 @@ function Root() {
     return (
         <Suspense fallback={ Loading }>
             <BrowserRouter>
-                <App />
+                <ApolloProvider client={ client }>
+                    <ApolloHooksProvider client={ client }>
+                        <App />
+                    </ApolloHooksProvider>
+                </ApolloProvider>
             </BrowserRouter>
         </Suspense>
     );

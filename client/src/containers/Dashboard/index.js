@@ -2,7 +2,6 @@ import React from 'react';
 import PropTypes from 'prop-types';
 import { withRouter } from 'react-router-dom';
 import Typography from '@material-ui/core/Typography';
-import toLower from 'lodash/toLower';
 
 import { Wrapper, StyledButtonBase } from './styles';
 
@@ -19,7 +18,7 @@ function Dashboard( props ) {
                     <StyledButtonBase
                         key={ category }
                         component="li"
-                        onClick={ () => props.history.push( toLower( `/recipes/${category}` )) }
+                        onClick={ () => props.history.push( `/recipes/${category}`.toLowerCase()) }
                     >
                         <div>
                             <Typography variant="h6">
