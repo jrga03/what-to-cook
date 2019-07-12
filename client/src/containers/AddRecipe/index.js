@@ -1,15 +1,18 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import PropTypes from 'prop-types';
 import { Editor, EditorState, RichUtils } from 'draft-js';
 import styled from 'styled-components';
 import TextField from '@material-ui/core/TextField';
 import Typography from '@material-ui/core/Typography';
+import Button from '@material-ui/core/Button';
 import Bold from '@material-ui/icons/FormatBold'
 import Italic from '@material-ui/icons/FormatItalic'
 import Underlined from '@material-ui/icons/FormatUnderlined'
 import BlockQuote from '@material-ui/icons/FormatQuote'
 import Bulleted from '@material-ui/icons/FormatListBulleted'
 import Numbered from '@material-ui/icons/FormatListNumbered'
+
+import Multiselect from 'components/Multiselect'; /* eslint-disable-line import/no-unresolved */
 
 const Container = styled.main`
     width: 100vw;
@@ -18,6 +21,17 @@ const Container = styled.main`
     flex-direction: column;
     align-items: center;
     padding-bottom: 50px;
+    
+    .button-container {
+        display: flex;
+        width: 100%;
+        justify-content: flex-end;
+
+        button {
+            margin-top: 10px;
+            margin-right: 25px;
+        }
+    }
 `;
 
 const TextFieldWrapper = styled.div`
@@ -27,6 +41,11 @@ const TextFieldWrapper = styled.div`
     h6 {
         color: rgba( 0, 0, 0, 0.54 );
         font-size: 16px;
+    }
+
+    .multiselect {
+        margin-top: 16px;
+        margin-bottom: 8px;
     }
 `;
 
@@ -102,8 +121,8 @@ const StyleButton = ({ style, active, label, icon, onToggle }) => {
 
 StyleButton.propTypes = {
     style: PropTypes.string.isRequired,
-    label: PropTypes.string.isRequired,
-    icon: PropTypes.element.isRequired,
+    label: PropTypes.string,
+    icon: PropTypes.element,
     active: PropTypes.bool,
     onToggle: PropTypes.func.isRequired
 };
@@ -203,9 +222,18 @@ function getBlockStyle( block ) {
  *
  */
 function AddRecipe() {
+    const [ ingredients, setIngredients ] = useState([]);
     const [ editorState, setEditorState ] = useState( EditorState.createEmpty());
     const editorRef = useRef( null );
     // useEffect(() => console.log( editorState.getUndoStack())); // TODO: ???
+    // useEffect(() => console.log( ingredients ))
+
+    /**
+     * Set ingredients handler
+     */
+    function handleSetIngredients( value ) {
+        setIngredients( value );
+    }
 
     /**
      * Wrapper click handler
@@ -242,6 +270,13 @@ function AddRecipe() {
         setEditorState( RichUtils.toggleInlineStyle( editorState, inlineStyle ));
     }
 
+    /**
+     * On save handler
+     */
+    function handleSave() {
+        console.log( 'SAVE' );
+    }
+
     return (
         <Container>
             <TextFieldWrapper>
@@ -259,6 +294,17 @@ function AddRecipe() {
                     multiline
                     rowsMax={ 4 }
                     margin="normal"
+                />
+                <Multiselect
+                    id="recipe-ingredients-select"
+                    options={ [
+                        { label: 'Pepper (mock)', value: 'pepper' },
+                        { label: 'Salt (mock)', value: 'salt' }
+                    ] }
+                    value={ ingredients }
+                    onChange={ handleSetIngredients }
+                    className="multiselect"
+                    formatCreateLabel={ ( value ) => `Add "${value}" to the ingredients` }
                 />
             </TextFieldWrapper>
             <br />
@@ -283,6 +329,15 @@ function AddRecipe() {
                     ref={ editorRef }
                 />
             </EditorWrapper>
+            <div className="button-container">
+                <Button
+                    onClick={ handleSave }
+                    color="primary"
+                    variant="contained"
+                >
+                    Save
+                </Button>
+            </div>
         </Container>
     );
 }
