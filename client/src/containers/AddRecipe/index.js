@@ -1,220 +1,30 @@
 import React, { useState, useRef, useEffect } from 'react';
-import PropTypes from 'prop-types';
+import { useQuery } from 'react-apollo-hooks';
+import { gql } from 'apollo-boost';
 import { Editor, EditorState, RichUtils } from 'draft-js';
-import styled from 'styled-components';
 import TextField from '@material-ui/core/TextField';
 import Typography from '@material-ui/core/Typography';
 import Button from '@material-ui/core/Button';
-import Bold from '@material-ui/icons/FormatBold'
-import Italic from '@material-ui/icons/FormatItalic'
-import Underlined from '@material-ui/icons/FormatUnderlined'
-import BlockQuote from '@material-ui/icons/FormatQuote'
-import Bulleted from '@material-ui/icons/FormatListBulleted'
-import Numbered from '@material-ui/icons/FormatListNumbered'
 
 import Multiselect from 'components/Multiselect'; /* eslint-disable-line import/no-unresolved */
 
-const Container = styled.main`
-    width: 100vw;
-    max-width: 960px;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    padding-bottom: 50px;
-    
-    .button-container {
-        display: flex;
-        width: 100%;
-        justify-content: flex-end;
+import BlockTypeButtons from './BlockTypeButtons';
+import InlineStyleButtons from './InlineStyleButtons';
+import ActionButtons from './ActionButtons';
+import {
+    Container,
+    TextFieldWrapper,
+    EditorWrapper
+} from './styles';
 
-        button {
-            margin-top: 10px;
-            margin-right: 25px;
+const GET_INGREDIENTS = gql`
+    {
+        ingredients {
+            id,
+            name
         }
     }
 `;
-
-const TextFieldWrapper = styled.div`
-    width: calc( 100% - 2rem);
-    box-sizing: border-box;
-
-    h6 {
-        color: rgba( 0, 0, 0, 0.54 );
-        font-size: 16px;
-    }
-
-    .multiselect {
-        margin-top: 16px;
-        margin-bottom: 8px;
-    }
-`;
-
-const EditorWrapper = styled.div`
-    width: calc( 100% - 2rem);
-    box-sizing: border-box;
-    border: 1px solid #999;
-    border-radius: 10px;
-    padding: 1rem 0.5rem;
-
-    & > div {
-        width: 100%;
-    }
-
-    .DraftEditor-root {
-        min-height: 50vh;
-    }
-
-    .RichEditor-blockquote {
-        border-left: 5px solid #eee;
-        color: #666;
-        font-weight: bold;
-        margin: 16px 0;
-        padding: 10px 20px;
-    }
-
-    .style-controls {
-        margin-left: 10px;
-    }
-
-    .block-type-container {
-        display: flex;
-        flex-wrap: wrap;
-
-        & > div {
-            margin-top: 10px;
-            margin-bottom: 10px;
-        }
-    }
-`;
-
-const StyleButtonSpan = styled.span`
-    color: #999;
-    margin-right: 16px;
-    margin-bottom: 16px;
-    cursor: pointer;
-
-    &.active {
-        color: #5890ff;
-    }
-`;
-
-const StyleButton = ({ style, active, label, icon, onToggle }) => {
-    /**
-     * Inline style on click handler
-     */
-    function _onToggle( event ) {
-        event.preventDefault();
-        onToggle( style )
-    }
-
-    return (
-        <StyleButtonSpan
-            onMouseDown={ _onToggle }
-            className={ active ? 'active' : '' }
-            role="button"
-            tabIndex={ 0 }
-        >
-            { icon || label }
-        </StyleButtonSpan>
-    );
-}
-
-StyleButton.propTypes = {
-    style: PropTypes.string.isRequired,
-    label: PropTypes.string,
-    icon: PropTypes.element,
-    active: PropTypes.bool,
-    onToggle: PropTypes.func.isRequired
-};
-
-const BLOCK_TYPES = [
-    [
-        { label: 'H1', style: 'header-one' },
-        { label: 'H2', style: 'header-two' },
-        { label: 'H3', style: 'header-three' },
-        { label: 'H4', style: 'header-four' },
-        { label: 'H5', style: 'header-five' },
-        { label: 'H6', style: 'header-six' }
-    ],
-    [
-        { label: 'Blockquote', style: 'blockquote', icon: <BlockQuote /> },
-        { label: 'UL', style: 'unordered-list-item', icon: <Bulleted /> },
-        { label: 'OL', style: 'ordered-list-item', icon: <Numbered /> }
-    ]
-]
-
-const BlockTypeButtons = ({ editorState, onToggle }) => {
-    const selection = editorState.getSelection();
-    const blockType = editorState
-        .getCurrentContent()
-        .getBlockForKey( selection.getStartKey())
-        .getType();
-
-    return (
-        <div className="style-controls block-type-container">
-            { BLOCK_TYPES.map(( row, index ) => (
-                <div key={ index }> { /* eslint-disable-line */ }
-                    { row.map(( type ) => (
-                        <StyleButton
-                            key={ type.label || type.style }
-                            active={ type.style === blockType }
-                            label={ type.label }
-                            icon={ type.icon }
-                            onToggle={ onToggle }
-                            style={ type.style }
-                        />
-                    )) }
-                </div>
-            )) }
-        </div>
-    );
-}
-
-BlockTypeButtons.propTypes = {
-    editorState: PropTypes.object.isRequired,
-    onToggle: PropTypes.func.isRequired
-}
-
-const INLINE_STYLES = [
-    { label: 'Bold', style: 'BOLD', icon: <Bold /> },
-    { label: 'Italic', style: 'ITALIC', icon: <Italic /> },
-    { label: 'Underline', style: 'UNDERLINE', icon: <Underlined /> }
-];
-
-const InlineStyleButtons = ({ editorState, onToggle }) => {
-    const currentStyle = editorState.getCurrentInlineStyle();
-
-    return (
-        <div className="style-controls">
-            { INLINE_STYLES.map(( type ) => (
-                <StyleButton
-                    key={ type.style }
-                    active={ currentStyle.has( type.style ) }
-                    style={ type.style }
-                    icon={ type.icon }
-                    onToggle={ onToggle }
-                />
-            )) }
-        </div>
-    );
-};
-
-InlineStyleButtons.propTypes = {
-    editorState: PropTypes.object.isRequired,
-    onToggle: PropTypes.func.isRequired
-}
-
-/**
- * Block style getter
- */
-function getBlockStyle( block ) {
-    switch ( block.getType()) {
-            case 'blockquote':
-                return 'RichEditor-blockquote';
-            default:
-                return null;
-    }
-}
 
 /**
  *
@@ -222,11 +32,21 @@ function getBlockStyle( block ) {
  *
  */
 function AddRecipe() {
+    const [ ingredientsOptions, setIngredientsOptions ] = useState([]);
     const [ ingredients, setIngredients ] = useState([]);
     const [ editorState, setEditorState ] = useState( EditorState.createEmpty());
+    const { data, error, loading: ingredientOptionsLoading } = useQuery( GET_INGREDIENTS );
     const editorRef = useRef( null );
-    // useEffect(() => console.log( editorState.getUndoStack())); // TODO: ???
-    // useEffect(() => console.log( ingredients ))
+
+    useEffect(() => {
+        const onGetIngredientsSuccess = ( ingredientsData ) => {
+            setIngredientsOptions( ingredientsData )
+        };
+
+        if ( onGetIngredientsSuccess && !ingredientOptionsLoading && !error ) {
+            onGetIngredientsSuccess( data.ingredients )
+        }
+    }, [ data, error, ingredientOptionsLoading ])
 
     /**
      * Set ingredients handler
@@ -271,6 +91,20 @@ function AddRecipe() {
     }
 
     /**
+     * Handler for undo action
+     */
+    function onClickUndo() {
+        setEditorState( EditorState.undo( editorState ));
+    }
+
+    /**
+     * Handler for redo action
+     */
+    function onClickRedo() {
+        setEditorState( EditorState.redo( editorState ));
+    }
+
+    /**
      * On save handler
      */
     function handleSave() {
@@ -297,14 +131,17 @@ function AddRecipe() {
                 />
                 <Multiselect
                     id="recipe-ingredients-select"
-                    options={ [
-                        { label: 'Pepper (mock)', value: 'pepper' },
-                        { label: 'Salt (mock)', value: 'salt' }
-                    ] }
-                    value={ ingredients }
-                    onChange={ handleSetIngredients }
+                    label="Ingredients"
+                    placeholder="Select ingredients..."
                     className="multiselect"
-                    formatCreateLabel={ ( value ) => `Add "${value}" to the ingredients` }
+                    value={ ingredients }
+                    options={ ingredientsOptions.map(( options ) => ({ label: options.name, value: options.id })) }
+                    onChange={ handleSetIngredients }
+                    noOptionsMessage={ ({ inputValue }) => `Cannot find "${inputValue}"` }
+                    styles={{
+                        valueContainer: ( style ) => ({ ...style, paddingLeft: 0 })
+                    }}
+                    isLoading={ ingredientOptionsLoading }
                 />
             </TextFieldWrapper>
             <br />
@@ -315,6 +152,7 @@ function AddRecipe() {
             </TextFieldWrapper>
             <EditorWrapper onClick={ onWrapperClick }>
                 <BlockTypeButtons editorState={ editorState } onToggle={ onToggleBlockType } />
+                <ActionButtons editorState={ editorState } onClickUndo={ onClickUndo } onClickRedo={ onClickRedo } />
                 <InlineStyleButtons editorState={ editorState } onToggle={ onToggleInlineStyle } />
                 <hr />
                 <Editor
@@ -324,7 +162,7 @@ function AddRecipe() {
                     tabIndex={ 0 }
                     handleKeyCommand={ handleKeyCommand }
                     handlePastedFiles={ ( files ) => console.log( files ) }
-                    handleDroppedFiles={ ( files ) => console.log( files ) }
+                    handleDroppedFiles={ ( ...files ) => console.log( files ) }
                     blockStyleFn={ getBlockStyle }
                     ref={ editorRef }
                 />
@@ -340,6 +178,18 @@ function AddRecipe() {
             </div>
         </Container>
     );
+}
+
+/**
+ * Block style getter
+ */
+function getBlockStyle( block ) {
+    switch ( block.getType()) {
+            case 'blockquote':
+                return 'RichEditor-blockquote';
+            default:
+                return null;
+    }
 }
 
 export default AddRecipe;

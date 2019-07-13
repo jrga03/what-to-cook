@@ -1,5 +1,5 @@
 import React from 'react';
-import Select from 'react-select/creatable';
+import Select from 'react-select';
 import TextField from '@material-ui/core/TextField';
 import MenuItem from '@material-ui/core/MenuItem';
 import Typography from '@material-ui/core/Typography';
@@ -116,7 +116,7 @@ function Placeholder( props ) {
             color="textSecondary"
             style={{
                 position: 'absolute',
-                left: 10,
+                left: 2,
                 bottom: 6,
                 fontSize: 16
             }}
@@ -191,24 +191,25 @@ const components = {
 /**
  * Multiselect component
  */
-export default function Multiselect({ id, options, value, onChange, ...rest }) {
+export default function Multiselect({ id, label, placeholder, options, value, onChange, styles, ...rest }) {
     return (
         <Select
             inputId={ id }
             TextFieldProps={{
-                label: 'Ingredients',
+                label,
                 InputLabelProps: {
                     htmlFor: id,
                     shrink: true
                 }
             }}
-            placeholder="Select ingredients"
+            placeholder={ placeholder }
             options={ options }
             components={ components }
             value={ value }
             onChange={ onChange }
             isMulti
             isClearable={ false }
+            styles={ styles }
             { ...rest }
         />
     );
@@ -216,6 +217,8 @@ export default function Multiselect({ id, options, value, onChange, ...rest }) {
 
 Multiselect.propTypes = {
     id: PropTypes.string.isRequired,
+    label: PropTypes.string.isRequired,
+    placeholder: PropTypes.string,
     options: PropTypes.arrayOf(
         PropTypes.shape({
             label: PropTypes.any.isRequired,
@@ -223,5 +226,11 @@ Multiselect.propTypes = {
         }).isRequired
     ),
     value: PropTypes.any,
-    onChange: PropTypes.func
+    onChange: PropTypes.func,
+    styles: PropTypes.object
+}
+
+Multiselect.defaultProps = {
+    placeholder: 'Select...',
+    styles: {}
 }
