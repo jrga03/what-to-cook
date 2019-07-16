@@ -42,12 +42,16 @@ border: 1px solid #999;
 border-radius: 10px;
 padding: 1rem 0.5rem;
 
-& > div {
+.toolbar-controls, .DraftEditor-root {
     width: 100%;
 }
 
 .DraftEditor-root {
     min-height: 50vh;
+
+    .public-DraftEditor-content {
+        min-height: 50vh;
+    }
 }
 
 .RichEditor-blockquote {

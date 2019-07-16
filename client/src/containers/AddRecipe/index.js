@@ -1,7 +1,18 @@
-import React, { useState, useRef, useEffect } from 'react';
-import { useQuery } from 'react-apollo-hooks';
+import React, { PureComponent, createRef } from 'react';
+import { Query } from 'react-apollo';
 import { gql } from 'apollo-boost';
-import { Editor, EditorState, RichUtils } from 'draft-js';
+import {
+    EditorState,
+    RichUtils,
+    convertToRaw,
+    AtomicBlockUtils
+} from 'draft-js';
+import Editor, { composeDecorators } from 'draft-js-plugins-editor'
+import createImagePlugin from 'draft-js-image-plugin';
+import createAlignmentPlugin from 'draft-js-alignment-plugin';
+import createFocusPlugin from 'draft-js-focus-plugin';
+import createResizeablePlugin from 'draft-js-resizeable-plugin';
+import createBlockDndPlugin from 'draft-js-drag-n-drop-plugin';
 import TextField from '@material-ui/core/TextField';
 import Typography from '@material-ui/core/Typography';
 import Button from '@material-ui/core/Button';
@@ -26,158 +37,255 @@ const GET_INGREDIENTS = gql`
     }
 `;
 
+const focusPlugin = createFocusPlugin();
+const resizeablePlugin = createResizeablePlugin();
+const blockDndPlugin = createBlockDndPlugin();
+const alignmentPlugin = createAlignmentPlugin();
+const { AlignmentTool } = alignmentPlugin;
+
+const decorator = composeDecorators(
+    resizeablePlugin.decorator,
+    alignmentPlugin.decorator,
+    focusPlugin.decorator,
+    blockDndPlugin.decorator
+);
+const imagePlugin = createImagePlugin({ decorator });
+
+const plugins = [
+    blockDndPlugin,
+    focusPlugin,
+    alignmentPlugin,
+    resizeablePlugin,
+    imagePlugin
+];
+
 /**
  *
  * Add Recipe Component
  *
  */
-function AddRecipe() {
-    const [ ingredientsOptions, setIngredientsOptions ] = useState([]);
-    const [ ingredients, setIngredients ] = useState([]);
-    const [ editorState, setEditorState ] = useState( EditorState.createEmpty());
-    const { data, error, loading: ingredientOptionsLoading } = useQuery( GET_INGREDIENTS );
-    const editorRef = useRef( null );
+class AddRecipe extends PureComponent {
+    state = {
+        ingredients: [],
+        editorState: EditorState.createEmpty(),
+        ingredientsOptions: []
+    };
 
-    useEffect(() => {
-        const onGetIngredientsSuccess = ( ingredientsData ) => {
-            setIngredientsOptions( ingredientsData )
-        };
+    editorRef = createRef();
 
-        if ( onGetIngredientsSuccess && !ingredientOptionsLoading && !error ) {
-            onGetIngredientsSuccess( data.ingredients )
-        }
-    }, [ data, error, ingredientOptionsLoading ])
+    fileInputRef = createRef();
 
-    /**
-     * Set ingredients handler
-     */
-    function handleSetIngredients( value ) {
-        setIngredients( value );
-    }
+    onChangeEditor = ( editorState ) => this.setState({ editorState });
 
-    /**
-     * Wrapper click handler
-     */
-    function onWrapperClick() {
-        if ( !editorState.getSelection().getHasFocus()) {
-            setEditorState( EditorState.moveFocusToEnd( editorState ));
+    onEditorWrapperClick = () => {
+        if ( !this.state.editorState.getSelection().getHasFocus()) {
+            this.setState(({ editorState }) => ({
+                editorState: EditorState.moveFocusToEnd( editorState )
+            }));
         }
     }
 
-    /**
-     * Handler for key commands
-     */
-    function handleKeyCommand( command, currentEditorState ) {
+    onToggleBlockType = ( blockType ) => {
+        this.setState(({ editorState }) => ({
+            editorState: RichUtils.toggleBlockType( editorState, blockType )
+        }));
+    }
+
+    onToggleInlineStyle = ( inlineStyle ) => {
+        this.setState(({ editorState }) => ({
+            editorState: RichUtils.toggleInlineStyle( editorState, inlineStyle )
+        }));
+    }
+
+    onClickUndo = () => {
+        this.setState(({ editorState }) => ({
+            editorState: EditorState.undo( editorState )
+        }));
+    }
+
+    onClickRedo = () => {
+        this.setState(({ editorState }) => ({
+            editorState: EditorState.redo( editorState )
+        }));
+    }
+
+    onClickAttach = () => {
+        if ( this.fileInputRef ) {
+            this.fileInputRef.current.click();
+        }
+    }
+
+    onAttachFile = async ( event ) => {
+        for ( const file of event.target.files ) {
+            const convertedImage = await this.convertImageToBase64( file ); // eslint-disable-line
+            this.addImageToEditor( convertedImage );
+        }
+    }
+
+    handlePastedFile = async ([file]) => {
+        const convertedImage = await this.convertImageToBase64( file );
+        this.addImageToEditor( convertedImage );
+    }
+
+    handleDroppedFiles = async ( selectionState, files ) => {
+        for ( const file of files ) {
+            if ([ 'image/png', 'image/jpeg' ].includes( file.type )) {
+                const convertedImage = await this.convertImageToBase64( file ); // eslint-disable-line
+                this.addImageToEditor( convertedImage );
+            }
+        }
+    }
+
+    convertImageToBase64 = ( file ) => new Promise(( resolve, reject ) => {
+        try {
+            const reader = new FileReader();
+            reader.onloadend = ( event ) => {
+                resolve( event.target.result );
+            }
+            reader.readAsDataURL( file );
+        } catch ( error ) {
+            reject( error );
+        }
+    })
+
+    addImageToEditor = ( image ) => {
+        const contentState = this.state.editorState.getCurrentContent()
+        const contentStateWithEntity = contentState.createEntity(
+            'image',
+            'IMMUTABLE',
+            { src: image }
+        );
+        const entityKey = contentStateWithEntity.getLastCreatedEntityKey();
+        const newEditorState = EditorState.set(
+            this.state.editorState,
+            { currentContent: contentStateWithEntity },
+            "create-entity"
+        )
+
+        this.setState({
+            editorState: AtomicBlockUtils.insertAtomicBlock(
+                newEditorState,
+                entityKey,
+                ' '
+            )
+        }, () => this.editorRef.current.focus())
+    }
+
+    onFetchIngredients = ( data ) => {
+        this.setState({ ingredientsOptions: data.ingredients });
+    }
+
+    handleChangeIngredients = ( ingredients ) => this.setState({ ingredients });
+
+    handleKeyCommand = ( command, currentEditorState ) => {
         const newState = RichUtils.handleKeyCommand( currentEditorState, command );
         if ( newState ) {
-            setEditorState( newState );
+            this.setState({ editorState: newState });
             return 'handled';
         }
         return 'not-handled';
     }
 
-    /**
-     * Handler for toggling block type
-     */
-    function onToggleBlockType( blockType ) {
-        setEditorState( RichUtils.toggleBlockType( editorState, blockType ));
+    handleSave = () => {
+        console.log( convertToRaw( this.state.editorState.getCurrentContent()));
     }
 
-    /**
-     * Handler for toggling inline style
-     */
-    function onToggleInlineStyle( inlineStyle ) {
-        setEditorState( RichUtils.toggleInlineStyle( editorState, inlineStyle ));
+    render() {
+        return (
+            <Container>
+                <TextFieldWrapper>
+                    <TextField
+                        id="recipe-name-text-field"
+                        label="Recipe Name"
+                        fullWidth
+                        required
+                        margin="normal"
+                    />
+                    <TextField
+                        id="recipe-description-text-field"
+                        label="Description"
+                        fullWidth
+                        multiline
+                        rowsMax={ 4 }
+                        margin="normal"
+                    />
+                    <Query query={ GET_INGREDIENTS } onCompleted={ this.onFetchIngredients }>
+                        { ({ loading }) => (
+                            <Multiselect
+                                id="recipe-ingredients-select"
+                                label="Ingredients"
+                                placeholder="Select ingredients..."
+                                className="multiselect"
+                                value={ this.state.ingredients }
+                                options={ this.state.ingredientsOptions.map(( options ) => ({ label: options.name, value: options.id })) }
+                                onChange={ this.handleChangeIngredients }
+                                noOptionsMessage={ ({ inputValue }) => `Cannot find "${inputValue}"` }
+                                styles={{
+                                    valueContainer: ( style ) => ({ ...style, paddingLeft: 0 })
+                                }}
+                                isLoading={ loading }
+                            />
+                        ) }
+                    </Query>
+                </TextFieldWrapper>
+                <br />
+                <TextFieldWrapper>
+                    <Typography variant="h6">
+                        Instructions
+                    </Typography>
+                </TextFieldWrapper>
+                <EditorWrapper>
+                    <input
+                        style={{ display: 'none' }}
+                        type="file"
+                        id="files"
+                        accept="image/png, image/jpeg"
+                        name="files[]"
+                        multiple
+                        onChange={ this.onAttachFile }
+                        ref={ this.fileInputRef }
+                    />
+                    <BlockTypeButtons
+                        editorState={ this.state.editorState }
+                        onToggle={ this.onToggleBlockType }
+                    />
+                    <ActionButtons
+                        editorState={ this.state.editorState }
+                        onClickUndo={ this.onClickUndo }
+                        onClickRedo={ this.onClickRedo }
+                        onClickAttach={ this.onClickAttach }
+                    />
+                    <InlineStyleButtons
+                        editorState={ this.state.editorState }
+                        onToggle={ this.onToggleInlineStyle }
+                    />
+                    <hr />
+                    <Editor
+                        editorState={ this.state.editorState }
+                        onChange={ this.onChangeEditor }
+                        stripPastedStyles
+                        tabIndex={ 0 }
+                        handleKeyCommand={ this.handleKeyCommand }
+                        handlePastedFiles={ this.handlePastedFile }
+                        handleDroppedFiles={ this.handleDroppedFiles }
+                        blockStyleFn={ getBlockStyle }
+                        plugins={ plugins }
+                        ref={ this.editorRef }
+                    />
+                    <AlignmentTool />
+                </EditorWrapper>
+                <div className="button-container">
+                    <Button
+                        onClick={ this.handleSave }
+                        color="primary"
+                        variant="contained"
+                    >
+                        Save
+                    </Button>
+                </div>
+            </Container>
+        );
     }
-
-    /**
-     * Handler for undo action
-     */
-    function onClickUndo() {
-        setEditorState( EditorState.undo( editorState ));
-    }
-
-    /**
-     * Handler for redo action
-     */
-    function onClickRedo() {
-        setEditorState( EditorState.redo( editorState ));
-    }
-
-    /**
-     * On save handler
-     */
-    function handleSave() {
-        console.log( 'SAVE' );
-    }
-
-    return (
-        <Container>
-            <TextFieldWrapper>
-                <TextField
-                    id="recipe-name-text-field"
-                    label="Recipe Name"
-                    fullWidth
-                    required
-                    margin="normal"
-                />
-                <TextField
-                    id="recipe-description-text-field"
-                    label="Description"
-                    fullWidth
-                    multiline
-                    rowsMax={ 4 }
-                    margin="normal"
-                />
-                <Multiselect
-                    id="recipe-ingredients-select"
-                    label="Ingredients"
-                    placeholder="Select ingredients..."
-                    className="multiselect"
-                    value={ ingredients }
-                    options={ ingredientsOptions.map(( options ) => ({ label: options.name, value: options.id })) }
-                    onChange={ handleSetIngredients }
-                    noOptionsMessage={ ({ inputValue }) => `Cannot find "${inputValue}"` }
-                    styles={{
-                        valueContainer: ( style ) => ({ ...style, paddingLeft: 0 })
-                    }}
-                    isLoading={ ingredientOptionsLoading }
-                />
-            </TextFieldWrapper>
-            <br />
-            <TextFieldWrapper>
-                <Typography variant="h6">
-                    Instructions
-                </Typography>
-            </TextFieldWrapper>
-            <EditorWrapper onClick={ onWrapperClick }>
-                <BlockTypeButtons editorState={ editorState } onToggle={ onToggleBlockType } />
-                <ActionButtons editorState={ editorState } onClickUndo={ onClickUndo } onClickRedo={ onClickRedo } />
-                <InlineStyleButtons editorState={ editorState } onToggle={ onToggleInlineStyle } />
-                <hr />
-                <Editor
-                    editorState={ editorState }
-                    onChange={ setEditorState }
-                    stripPastedStyles
-                    tabIndex={ 0 }
-                    handleKeyCommand={ handleKeyCommand }
-                    handlePastedFiles={ ( files ) => console.log( files ) }
-                    handleDroppedFiles={ ( ...files ) => console.log( files ) }
-                    blockStyleFn={ getBlockStyle }
-                    ref={ editorRef }
-                />
-            </EditorWrapper>
-            <div className="button-container">
-                <Button
-                    onClick={ handleSave }
-                    color="primary"
-                    variant="contained"
-                >
-                    Save
-                </Button>
-            </div>
-        </Container>
-    );
 }
 
 /**

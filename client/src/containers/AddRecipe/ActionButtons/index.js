@@ -2,10 +2,11 @@ import React from 'react';
 import PropTypes from 'prop-types';
 import Undo from '@material-ui/icons/Undo';
 import Redo from '@material-ui/icons/Redo';
+import AttachFile from '@material-ui/icons/AttachFile';
 
 import ToolbarButton from '../ToolbarButton';
 
-const ActionButtons = ({ editorState, onClickUndo, onClickRedo }) => {
+const ActionButtons = ({ editorState, onClickUndo, onClickRedo, onClickAttach }) => {
     const undoStack = editorState.getUndoStack();
     const redoStack = editorState.getRedoStack();
 
@@ -21,6 +22,10 @@ const ActionButtons = ({ editorState, onClickUndo, onClickRedo }) => {
                 icon={ <Redo /> }
                 onToggle={ onClickRedo }
             />
+            <ToolbarButton
+                icon={ <AttachFile /> }
+                onToggle={ onClickAttach }
+            />
         </div>
     );
 }
@@ -28,7 +33,8 @@ const ActionButtons = ({ editorState, onClickUndo, onClickRedo }) => {
 ActionButtons.propTypes = {
     editorState: PropTypes.object.isRequired,
     onClickUndo: PropTypes.func.isRequired,
-    onClickRedo: PropTypes.func.isRequired
+    onClickRedo: PropTypes.func.isRequired,
+    onClickAttach: PropTypes.func.isRequired
 }
 
 export default ActionButtons;
