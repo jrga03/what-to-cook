@@ -20,4 +20,51 @@ IngredientSchema.statics.findRecipes = async ( recipeIds ) => {
     }
 }
 
+IngredientSchema.statics.batchAdd = async ( ingredientNames ) => {
+    const Ingredient = mongoose.model( 'ingredient' );
+
+    try {
+        const existingIngredients = await Ingredient.find({ name: { $in: ingredientNames } });
+        const existingIngredientsMap = new Map();
+        existingIngredients.forEach(( ingredient ) => existingIngredientsMap.set( ingredient.name, ingredient.name ));
+
+        const newIngredients = ingredientNames.reduce(( ingredientArray, ingredient ) => {
+            if ( !existingIngredientsMap.has( ingredient ) ) {
+                ingredientArray.push({ name: ingredient });
+            }
+            return ingredientArray;
+        }, []);
+
+        let ingredients = [];
+        if ( newIngredients.length > 0 ) {
+            ingredients = await Ingredient.insertMany( newIngredients );
+        }
+        return ingredients;
+    } catch ( error ) {
+        throw error;
+    }
+}
+
+IngredientSchema.statics.batchDelete = async ( ingredientIds ) => {
+    const Ingredient = mongoose.model( 'ingredient' );
+
+    try {
+        await Ingredient.deleteMany({ _id: { $in: ingredientIds } });
+        return Ingredient.find({});
+    } catch ( error ) {
+        throw error;
+    }
+}
+
+IngredientSchema.pre('save', async function( next ) {
+    const Ingredient = mongoose.model( 'ingredient' );
+
+    const ingredient = await Ingredient.find({ name: this.name });
+    if ( ingredient.length > 0 ) {
+        next( new Error( 'Ingredient already exists!' ) )
+    } else {
+        next();
+    }
+});
+
 mongoose.model( 'ingredient', IngredientSchema );

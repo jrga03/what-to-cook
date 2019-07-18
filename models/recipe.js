@@ -9,7 +9,8 @@ const RecipeSchema = new Schema({
         type: Schema.Types.ObjectId,
         ref: 'ingredient'
     }],
-    tags: [{ type: String }]
+    tags: [{ type: String }],
+    instructions: { type: String }
 });
 
 RecipeSchema.statics.addIngredientToRecipe = async ( ingredientIds, recipeId ) => {
