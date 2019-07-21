@@ -1,6 +1,8 @@
 import React, { PureComponent, createRef } from 'react';
+import PropTypes from 'prop-types';
 import { Query } from 'react-apollo';
 import { gql } from 'apollo-boost';
+import { withRouter } from 'react-router-dom';
 import {
     EditorState,
     RichUtils,
@@ -17,6 +19,7 @@ import TextField from '@material-ui/core/TextField';
 import Typography from '@material-ui/core/Typography';
 import Button from '@material-ui/core/Button';
 import Snackbar from '@material-ui/core/Snackbar';
+import imageCompression from 'browser-image-compression';
 import startCase from 'lodash/startCase';
 
 /* eslint-disable import/no-unresolved */
@@ -74,8 +77,17 @@ const plugins = [
  *
  */
 class AddRecipe extends PureComponent {
+    static propTypes = {
+        history: PropTypes.object
+    }
+
     state = {
-        snackbar_open: false,
+        snackbar: {
+            open: false,
+            message: ''
+        },
+        name: '',
+        description: '',
         editorState: EditorState.createEmpty(),
         ingredients: [],
         ingredients_options: [],
@@ -86,6 +98,8 @@ class AddRecipe extends PureComponent {
     editorRef = createRef();
 
     fileInputRef = createRef();
+
+    recipeNameRef = createRef();
 
     onChangeEditor = ( editorState ) => this.setState({ editorState });
 
@@ -128,33 +142,87 @@ class AddRecipe extends PureComponent {
     }
 
     onAttachFile = async ( event ) => {
+        this.setState({
+            snackbar: {
+                open: true,
+                message: `Attaching ${event.target.files.length > 1 ? 'files' : 'file'}...`
+            }
+        });
+
         for ( const file of event.target.files ) {
             const convertedImage = await this.convertImageToBase64( file ); // eslint-disable-line
             this.addImageToEditor( convertedImage );
         }
+
+        this.setState({
+            snackbar: {
+                open: false,
+                message: ''
+            }
+        });
     }
 
+    onChangeInput = ( event ) => this.setState({ [ event.target.name ]: event.target.value });
+
+    onBlurInput = ( event ) => this.setState({ [ `${event.target.name}_error` ]: !event.target.value })
+
     handlePastedFile = async ([file]) => {
+        this.setState({
+            snackbar: {
+                open: true,
+                message: 'Attaching file...'
+            }
+        });
+
         const convertedImage = await this.convertImageToBase64( file );
         this.addImageToEditor( convertedImage );
+
+        this.setState({
+            snackbar: {
+                open: false,
+                message: ''
+            }
+        });
     }
 
     handleDroppedFiles = async ( selectionState, files ) => {
+        this.setState({
+            snackbar: {
+                open: true,
+                message: `Attaching ${files.length > 1 ? 'files' : 'file'}...`
+            }
+        });
+
         for ( const file of files ) {
             if ([ 'image/png', 'image/jpeg' ].includes( file.type )) {
                 const convertedImage = await this.convertImageToBase64( file ); // eslint-disable-line
                 this.addImageToEditor( convertedImage );
             }
         }
+
+        this.setState({
+            snackbar: {
+                open: false,
+                message: ''
+            }
+        });
     }
 
-    convertImageToBase64 = ( file ) => new Promise(( resolve, reject ) => {
+    async compressImage( image ) {
+        const options = {
+            maxSizeMB: 0.1
+        }
+        const compressed = await imageCompression( image, options );
+        return compressed;
+    }
+
+    convertImageToBase64 = ( file ) => new Promise( async ( resolve, reject ) => {
         try {
             const reader = new FileReader();
             reader.onloadend = ( event ) => {
                 resolve( event.target.result );
             }
-            reader.readAsDataURL( file );
+            reader.readAsDataURL( await this.compressImage( file ));
         } catch ( error ) {
             reject( error );
         }
@@ -208,12 +276,61 @@ class AddRecipe extends PureComponent {
             return;
         }
 
-        this.setState({ snackbar_open: false });
+        this.setState({
+            snackbar: {
+                open: false,
+                message: ''
+            }
+        });
+    }
+
+    checkForm() {
+        let valid = true;
+        const newState = {};
+
+        if ( !this.state.name ) {
+            valid = false;
+            newState.name_error = true;
+            this.recipeNameRef.current.focus();
+        }
+
+        this.setState( newState );
+        return valid;
     }
 
     handleSave = () => {
-        console.log( convertToRaw( this.state.editorState.getCurrentContent()));
-        this.setState({ snackbar_open: true });
+        if ( this.checkForm()) {
+            const tags = this.state.tags.reduce(( tagsObj, tag ) => {
+                if ( tag.__isNew__ ) {
+                    tagsObj.new.push( tag.value );
+                } else {
+                    tagsObj.existing.push( tag.value )
+                }
+                return tagsObj;
+            }, {
+                new: [],
+                existing: []
+            });
+
+            const payload = {
+                name: this.state.name,
+                description: this.state.description,
+                ingredients: this.state.ingredients.map(( ingredient ) => ingredient.value ),
+                instructions: JSON.stringify( convertToRaw( this.state.editorState.getCurrentContent())),
+                tags: tags.existing,
+                newTags: tags.new
+            };
+
+            this.setState({
+                snackbar: {
+                    open: true,
+                    message: 'Saving recipe...'
+                }
+            });
+            console.log( payload );
+
+            this.props.history.push( '/recipes' );
+        }
     }
 
     render() {
@@ -223,19 +340,29 @@ class AddRecipe extends PureComponent {
                     <TextField
                         id="recipe-name-text-field"
                         label="Recipe Name"
+                        name="name"
                         fullWidth
                         required
+                        error={ this.state.name_error }
+                        helperText={ this.state.name_error && 'Required' }
                         margin="normal"
                         disabled={ false }
+                        value={ this.state.name }
+                        onChange={ this.onChangeInput }
+                        onBlur={ this.onBlurInput }
+                        inputRef={ this.recipeNameRef }
                     />
                     <TextField
                         id="recipe-description-text-field"
                         label="Description"
+                        name="description"
                         fullWidth
                         multiline
                         rowsMax={ 4 }
                         margin="normal"
                         disabled={ false }
+                        value={ this.state.description }
+                        onChange={ this.onChangeInput }
                     />
                     <Query query={ GET_OPTIONS } onCompleted={ this.onFetchOptions }>
                         { ({ loading }) => (
@@ -339,13 +466,12 @@ class AddRecipe extends PureComponent {
                         vertical: 'bottom',
                         horizontal: 'left'
                     }}
-                    open={ this.state.snackbar_open }
+                    open={ this.state.snackbar.open }
                     onClose={ this.handleSnackbarClose }
-                    autoHideDuration={ 6000 }
                     ContentProps={{
                         'aria-describedby': 'message-id'
                     }}
-                    message={ <span id="message-id">Uploading images. This may take a while...</span> }
+                    message={ <span id="message-id">{ this.state.snackbar.message }</span> }
                 />
             </Container>
         );
@@ -364,4 +490,4 @@ function getBlockStyle( block ) {
     }
 }
 
-export default AddRecipe;
+export default withRouter( AddRecipe );
