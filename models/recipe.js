@@ -84,7 +84,7 @@ RecipeSchema.statics.addIngredientToRecipe = async ( ingredientIds, recipeId ) =
     }
 }
 
-RecipeSchema.statics.addRecipe = async ({ name, description = '', ingredients = [], instructions, tags = []}) => {
+RecipeSchema.statics.addRecipe = async ({ name, description = '', ingredients = [], instructions, tags = [], newTags = []}) => {
     const Recipe = mongoose.model( 'recipe' );
 
     try {
@@ -95,6 +95,12 @@ RecipeSchema.statics.addRecipe = async ({ name, description = '', ingredients = 
         if ( tags.length > 0 ) {
             const Tag = mongoose.model( 'tag' );
             promises.push( Tag.updateMany({ _id: { $in: tags } }, { $addToSet: { recipes: recipe._id } }));
+        }
+
+        if ( newTags.length > 0 ) {
+            const Tag = mongoose.model( 'tag' );
+            const newTagsWithRecipe = newTags.map(( tag ) => ({ name: tag, recipes: [recipe._id] }))
+            promises.push( Tag.insertMany( newTagsWithRecipe ));
         }
 
         if ( ingredients.length > 0 ) {
@@ -125,6 +131,12 @@ RecipeSchema.statics.editRecipe = async ({ id, ...args }) => {
         if ( args.tags && args.tags.length > 0 ) {
             const Tag = mongoose.model( 'tag' );
             promises.push( Tag.updateMany({ _id: { $in: args.tags } }, { $addToSet: { recipes: id } }));
+        }
+
+        if ( args.newTags.length > 0 ) {
+            const Tag = mongoose.model( 'tag' );
+            const newTagsWithRecipe = args.newTags.map(( tag ) => ({ name: tag, recipes: [id] }))
+            promises.push( Tag.insertMany( newTagsWithRecipe ));
         }
 
         if ( args.ingredients && args.ingredients.length > 0 ) {

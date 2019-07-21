@@ -29,7 +29,7 @@ TagSchema.statics.batchAdd = async ( tagNames ) => {
         existingTags.forEach(( tag ) => existingTagsMap.set( tag.name, tag.name ))
 
         const newTags = tagNames.reduce(( tagArray, tag ) => {
-            if ( !existingTags.has( tag ) ) {
+            if ( !existingTagsMap.has( tag ) ) {
                 tagArray.push({ name: tag });
             }
             return tagArray;
@@ -39,6 +39,7 @@ TagSchema.statics.batchAdd = async ( tagNames ) => {
         if ( newTags.length > 0 ) {
             tags = await Tag.insertMany( newTags );
         }
+
         return tags;
     } catch ( error ) {
         throw error;

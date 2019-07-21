@@ -129,7 +129,8 @@ const mutation = new GraphQLObjectType({
                 description: { type: GraphQLString },
                 ingredients: { type: GraphQLList( GraphQLID ) },
                 instructions: { type: GraphQLNonNull( GraphQLString ) },
-                tags: { type: GraphQLList( GraphQLID ) }
+                tags: { type: GraphQLList( GraphQLID ) },
+                newTags: { type: GraphQLList( GraphQLString ) }
             },
             resolve( parentValue, args ) {
                 return Recipe.addRecipe( args );
@@ -143,7 +144,8 @@ const mutation = new GraphQLObjectType({
                 description: { type: GraphQLString },
                 ingredients: { type: GraphQLList( GraphQLID ) },
                 instructions: { type: GraphQLNonNull( GraphQLString ) },
-                tags: { type: GraphQLList( GraphQLID ) }
+                tags: { type: GraphQLList( GraphQLID ) },
+                newTags: { type: GraphQLList( GraphQLString ) }
             },
             resolve( parentValue, args ) {
                 return Recipe.editRecipe( args );
@@ -213,6 +215,16 @@ const mutation = new GraphQLObjectType({
             },
             resolve( parentValue, { name = '' }) {
                 return ( new Tag({ name: name.toLowerCase() })).save();
+            }
+        },
+        addTags: {
+            type: GraphQLList( TagType ),
+            args: {
+                tags: { type: GraphQLNonNull( GraphQLList( GraphQLNonNull( GraphQLString ))) }
+            },
+            resolve( parentValue, { tags }) {
+                const tagNames = tags.map(( tag ) => tag.toLowerCase());
+                return Tag.batchAdd( tagNames );
             }
         },
         deleteTag: {
