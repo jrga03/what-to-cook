@@ -9,10 +9,56 @@ const RecipeSchema = new Schema({
         type: Schema.Types.ObjectId,
         ref: 'ingredient'
     }],
-    tags: [{ type: String }],
+    tags: [{
+        type: Schema.Types.ObjectId,
+        ref: 'tag'
+    }],
     instructions: { type: String }
 });
 
+/**
+ *
+ * Query methods
+ *
+ */
+RecipeSchema.statics.findIngredients = async ( ingredientIds ) => {
+    const Ingredient = mongoose.model( 'ingredient' );
+
+    try {
+        const ingredients = await Ingredient.find({ _id: { $in: ingredientIds }})
+        return ingredients;
+    } catch ( error ) {
+        throw error;
+    }
+}
+
+RecipeSchema.statics.findTags = async ( tagIds ) => {
+    const Tag = mongoose.model( 'tag' );
+
+    try {
+        const tags = await Tag.find({ _id: { $in: tagIds }})
+        return tags;
+    } catch ( error ) {
+        throw error;
+    }
+}
+
+RecipeSchema.statics.findRecipeByTags = async ( tagNames ) => {
+    const Recipe = mongoose.model( 'recipe' );
+
+    try {
+        const recipes = await Recipe.find({ tags: { $in: tagNames }}) // TODO: something is wrong! Find intersection of tags
+        return recipes;
+    } catch ( error ) {
+        throw error;
+    }
+}
+
+/**
+ *
+ * Mutation methods
+ *
+ */
 RecipeSchema.statics.addIngredientToRecipe = async ( ingredientIds, recipeId ) => {
     const Ingredient = mongoose.model( 'ingredient' );
     const Recipe = mongoose.model( 'recipe' );
@@ -25,7 +71,6 @@ RecipeSchema.statics.addIngredientToRecipe = async ( ingredientIds, recipeId ) =
         const promises = [recipe.save()];
 
         for ( const ingredientId of ingredientIds ) {
-            // eslint-disable-next-line no-await-in-loop
             const ingredient = await Ingredient.findById( ingredientId ).exec();
             ingredient.recipes.addToSet( recipe );
             promises.push( ingredient.save());
@@ -39,12 +84,27 @@ RecipeSchema.statics.addIngredientToRecipe = async ( ingredientIds, recipeId ) =
     }
 }
 
-RecipeSchema.statics.findIngredients = async ( ingredientIds ) => {
-    const Ingredient = mongoose.model( 'ingredient' );
+RecipeSchema.statics.addRecipe = async ({ name, description = '', ingredients = [], instructions, tags = []}) => {
+    const Recipe = mongoose.model( 'recipe' );
 
     try {
-        const ingredients = await Ingredient.find({ _id: { $in: ingredientIds }})
-        return ingredients;
+        const recipe = new Recipe({ name, description, ingredients, instructions, tags });
+
+        const promises = [recipe.save()];
+
+        if ( tags.length > 0 ) {
+            const Tag = mongoose.model( 'tag' );
+            promises.push( Tag.updateMany({ _id: { $in: tags } }, { $addToSet: { recipes: recipe._id } }));
+        }
+
+        if ( ingredients.length > 0 ) {
+            const Ingredient = mongoose.model( 'ingredient' );
+            promises.push( Ingredient.updateMany({ _id: { $in: ingredients } }, { $addToSet: { recipes: recipe._id } }));
+        }
+
+        const [updatedRecipe] = await Promise.all( promises );
+
+        return updatedRecipe;
     } catch ( error ) {
         throw error;
     }
@@ -54,8 +114,27 @@ RecipeSchema.statics.editRecipe = async ({ id, ...args }) => {
     const Recipe = mongoose.model( 'recipe' );
 
     try {
-        const recipe = await Recipe.findOneAndUpdate({ id }, args, { new: true, upsert: true });
-        return recipe;
+        const recipe = await Recipe.findById( id );
+
+        Object.keys( args ).forEach(( key ) => {
+            recipe[ key ] = args[ key ];
+        });
+
+        const promises = [recipe.save()];
+
+        if ( args.tags && args.tags.length > 0 ) {
+            const Tag = mongoose.model( 'tag' );
+            promises.push( Tag.updateMany({ _id: { $in: args.tags } }, { $addToSet: { recipes: id } }));
+        }
+
+        if ( args.ingredients && args.ingredients.length > 0 ) {
+            const Ingredient = mongoose.model( 'ingredient' );
+            promises.push( Ingredient.updateMany({ _id: { $in: args.ingredients } }, { $addToSet: { recipes: id } }));
+        }
+
+        const [updatedRecipe] = await Promise.all( promises );
+
+        return updatedRecipe;
     } catch ( error ) {
         throw error;
     }

@@ -5,20 +5,11 @@ const {
     GraphQLList,
     GraphQLID,
     GraphQLNonNull,
-    GraphQLInputObjectType,
     GraphQLString
 } = require( 'graphql' );
 const Ingredient = model( 'ingredient' );
 const Recipe = model( 'recipe' );
-
-const IngredientInputType = new GraphQLInputObjectType({
-    name: "IngredientInputType",
-    description: "Input ingredient payload",
-    fields: () => ({
-        id: { type: new GraphQLNonNull( GraphQLID ) },
-        name: { type: new GraphQLNonNull( GraphQLString ) }
-    })
-});
+const Tag = model( 'tag' );
 
 const IngredientType = new GraphQLObjectType({
     name: 'IngredientType',
@@ -51,7 +42,30 @@ const RecipeType = new GraphQLObjectType({
             }
         },
         instructions: { type: GraphQLString },
-        tags: { type: GraphQLList( GraphQLString ) }
+        tags: {
+            type: GraphQLList( TagType ),
+            description: '',
+            async resolve( parentValue ) {
+                const tags = await Recipe.findTags( parentValue.tags );
+                return tags;
+            }
+        }
+    })
+});
+
+const TagType = new GraphQLObjectType({
+    name: 'TagType',
+    fields: () => ({
+        id: { type: GraphQLID },
+        name: { type: GraphQLString },
+        recipes: {
+            type: GraphQLList( RecipeType ),
+            description: '',
+            async resolve( parentValue ) {
+                const recipes = await Tag.findRecipes( parentValue.recipes );
+                return recipes;
+            }
+        }
     })
 });
 
@@ -60,7 +74,14 @@ const query = new GraphQLObjectType({
     fields: () => ({
         recipes: {
             type: GraphQLList( RecipeType ),
-            resolve() {
+            args: {
+                tags: { type: GraphQLList( GraphQLNonNull( GraphQLString)) }
+            },
+            async resolve( parentValue, { tags = []}) {
+                if ( tags.length > 0 ) {
+                    const recipes = await Recipe.findRecipeByTags( tags ); // TODO: fix method
+                    return recipes;
+                }
                 return Recipe.find({});
             }
         },
@@ -88,6 +109,12 @@ const query = new GraphQLObjectType({
             resolve( parentValue, { id }) {
                 return Ingredient.findById( id );
             }
+        },
+        tags: {
+            type: GraphQLList( TagType ),
+            resolve() {
+                return Tag.find({});
+            }
         }
     })
 });
@@ -100,12 +127,12 @@ const mutation = new GraphQLObjectType({
             args: {
                 name: { type: GraphQLNonNull( GraphQLString ) },
                 description: { type: GraphQLString },
-                ingredients: { type: GraphQLList( IngredientInputType ) },
+                ingredients: { type: GraphQLList( GraphQLID ) },
                 instructions: { type: GraphQLNonNull( GraphQLString ) },
-                tags: { type: GraphQLList( GraphQLString ) }
+                tags: { type: GraphQLList( GraphQLID ) }
             },
-            resolve( parentValue, { name = '', description = '', ingredients = []}) {
-                return ( new Recipe({ name, description, ingredients })).save();
+            resolve( parentValue, args ) {
+                return Recipe.addRecipe( args );
             }
         },
         editRecipe: {
@@ -114,13 +141,12 @@ const mutation = new GraphQLObjectType({
                 id: { type: GraphQLNonNull( GraphQLID ) },
                 name: { type: GraphQLString },
                 description: { type: GraphQLString },
-                ingredients: { type: GraphQLList( IngredientInputType ) },
+                ingredients: { type: GraphQLList( GraphQLID ) },
                 instructions: { type: GraphQLNonNull( GraphQLString ) },
-                tags: { type: GraphQLList( GraphQLString ) }
+                tags: { type: GraphQLList( GraphQLID ) }
             },
             resolve( parentValue, args ) {
-                const recipe = Recipe.editRecipe( args );
-                return recipe;
+                return Recipe.editRecipe( args );
             }
         },
         addIngredient: {
@@ -178,6 +204,28 @@ const mutation = new GraphQLObjectType({
             },
             resolve( parentValue, { id, recipeId }) {
                 return Recipe.removeIngredient( recipeId, id );
+            }
+        },
+        addTag: {
+            type: TagType,
+            args: {
+                name: { type: GraphQLNonNull( GraphQLString ) }
+            },
+            resolve( parentValue, { name = '' }) {
+                return ( new Tag({ name: name.toLowerCase() })).save();
+            }
+        },
+        deleteTag: {
+            type: TagType,
+            args: {
+                id: { type: GraphQLID },
+                name: { type: GraphQLString }
+            },
+            resolve( parentValue, { name, id }) {
+                if ( id ) {
+                    return Tag.remove({ _id: id });
+                }
+                return Tag.remove({ name: name.toLowerCase() });
             }
         }
     })
