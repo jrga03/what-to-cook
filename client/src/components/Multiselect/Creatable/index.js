@@ -1,13 +1,13 @@
 import React from 'react';
 import PropTypes from 'prop-types';
-import Select from 'react-select';
+import CreatableSelect from 'react-select/creatable';
 
-import Control from './Control';
-import Option from './Option';
-import NoOptionsMessage from './NoOptionsMessage';
-import Placeholder from './Placeholder';
-import Menu from './Menu';
-import MultiValue from './MultiValue';
+import Control from '../Control';
+import Option from '../Option';
+import NoOptionsMessage from '../NoOptionsMessage';
+import Placeholder from '../Placeholder';
+import Menu from '../Menu';
+import MultiValue from '../MultiValue';
 
 const components = {
     Control,
@@ -19,11 +19,11 @@ const components = {
 };
 
 /**
- * Multiselect component
+ * CreatableMultiselect component
  */
-export default function Multiselect({ id, label, placeholder, options, value, onChange, styles, ...rest }) {
+export default function CreatableMultiselect({ id, label, placeholder, options, value, onChange, styles, ...rest }) {
     return (
-        <Select
+        <CreatableSelect
             inputId={ id }
             TextFieldProps={{
                 label,
@@ -45,7 +45,7 @@ export default function Multiselect({ id, label, placeholder, options, value, on
     );
 }
 
-Multiselect.propTypes = {
+CreatableMultiselect.propTypes = {
     id: PropTypes.string.isRequired,
     label: PropTypes.string.isRequired,
     placeholder: PropTypes.string,
@@ -60,7 +60,7 @@ Multiselect.propTypes = {
     styles: PropTypes.object
 }
 
-Multiselect.defaultProps = {
+CreatableMultiselect.defaultProps = {
     placeholder: 'Select...',
     styles: {}
 }

@@ -22,7 +22,7 @@ const BLOCK_TYPES = [
     ]
 ]
 
-const BlockTypeButtons = ({ editorState, onToggle }) => {
+const BlockTypeButtons = ({ editorState, onToggle, disabled }) => {
     const selection = editorState.getSelection();
     const blockType = editorState
         .getCurrentContent()
@@ -41,6 +41,7 @@ const BlockTypeButtons = ({ editorState, onToggle }) => {
                             icon={ type.icon }
                             onToggle={ onToggle }
                             style={ type.style }
+                            disabled={ disabled }
                         />
                     )) }
                 </div>
@@ -51,7 +52,8 @@ const BlockTypeButtons = ({ editorState, onToggle }) => {
 
 BlockTypeButtons.propTypes = {
     editorState: PropTypes.object.isRequired,
-    onToggle: PropTypes.func.isRequired
+    onToggle: PropTypes.func.isRequired,
+    disabled: PropTypes.bool
 }
 
 export default BlockTypeButtons;

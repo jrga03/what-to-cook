@@ -16,8 +16,13 @@ import createBlockDndPlugin from 'draft-js-drag-n-drop-plugin';
 import TextField from '@material-ui/core/TextField';
 import Typography from '@material-ui/core/Typography';
 import Button from '@material-ui/core/Button';
+import Snackbar from '@material-ui/core/Snackbar';
+import startCase from 'lodash/startCase';
 
-import Multiselect from 'components/Multiselect'; /* eslint-disable-line import/no-unresolved */
+/* eslint-disable import/no-unresolved */
+import Multiselect from 'components/Multiselect';
+import CreatableMultiselect from 'components/Multiselect/Creatable';
+/* eslint-enable import/no-unresolved */
 
 import BlockTypeButtons from './BlockTypeButtons';
 import InlineStyleButtons from './InlineStyleButtons';
@@ -28,9 +33,13 @@ import {
     EditorWrapper
 } from './styles';
 
-const GET_INGREDIENTS = gql`
+const GET_OPTIONS = gql`
     {
         ingredients {
+            id,
+            name
+        },
+        tags {
             id,
             name
         }
@@ -66,9 +75,12 @@ const plugins = [
  */
 class AddRecipe extends PureComponent {
     state = {
-        ingredients: [],
+        snackbar_open: false,
         editorState: EditorState.createEmpty(),
-        ingredientsOptions: []
+        ingredients: [],
+        ingredients_options: [],
+        tags: [],
+        tags_options: []
     };
 
     editorRef = createRef();
@@ -171,11 +183,16 @@ class AddRecipe extends PureComponent {
         }, () => this.editorRef.current.focus())
     }
 
-    onFetchIngredients = ( data ) => {
-        this.setState({ ingredientsOptions: data.ingredients });
+    onFetchOptions = ( data ) => {
+        this.setState({
+            ingredients_options: data.ingredients.map(( ingredient ) => ({ label: startCase( ingredient.name ), value: ingredient.id })),
+            tags_options: data.tags.map(( tag ) => ({ label: startCase( tag.name ), value: tag.id }))
+        });
     }
 
     handleChangeIngredients = ( ingredients ) => this.setState({ ingredients });
+
+    handleChangeTags = ( tags ) => this.setState({ tags });
 
     handleKeyCommand = ( command, currentEditorState ) => {
         const newState = RichUtils.handleKeyCommand( currentEditorState, command );
@@ -186,8 +203,17 @@ class AddRecipe extends PureComponent {
         return 'not-handled';
     }
 
+    handleSnackbarClose = ( event, reason ) => {
+        if ( reason === 'clickaway' ) {
+            return;
+        }
+
+        this.setState({ snackbar_open: false });
+    }
+
     handleSave = () => {
         console.log( convertToRaw( this.state.editorState.getCurrentContent()));
+        this.setState({ snackbar_open: true });
     }
 
     render() {
@@ -200,6 +226,7 @@ class AddRecipe extends PureComponent {
                         fullWidth
                         required
                         margin="normal"
+                        disabled={ false }
                     />
                     <TextField
                         id="recipe-description-text-field"
@@ -208,23 +235,42 @@ class AddRecipe extends PureComponent {
                         multiline
                         rowsMax={ 4 }
                         margin="normal"
+                        disabled={ false }
                     />
-                    <Query query={ GET_INGREDIENTS } onCompleted={ this.onFetchIngredients }>
+                    <Query query={ GET_OPTIONS } onCompleted={ this.onFetchOptions }>
                         { ({ loading }) => (
-                            <Multiselect
-                                id="recipe-ingredients-select"
-                                label="Ingredients"
-                                placeholder="Select ingredients..."
-                                className="multiselect"
-                                value={ this.state.ingredients }
-                                options={ this.state.ingredientsOptions.map(( options ) => ({ label: options.name, value: options.id })) }
-                                onChange={ this.handleChangeIngredients }
-                                noOptionsMessage={ ({ inputValue }) => `Cannot find "${inputValue}"` }
-                                styles={{
-                                    valueContainer: ( style ) => ({ ...style, paddingLeft: 0 })
-                                }}
-                                isLoading={ loading }
-                            />
+                            <>
+                                <Multiselect
+                                    id="recipe-ingredients-select"
+                                    label="Ingredients"
+                                    placeholder="Select ingredients..."
+                                    className="multiselect"
+                                    value={ this.state.ingredients }
+                                    options={ this.state.ingredients_options }
+                                    onChange={ this.handleChangeIngredients }
+                                    noOptionsMessage={ ({ inputValue }) => `Cannot find "${inputValue}"` }
+                                    styles={{
+                                        valueContainer: ( style ) => ({ ...style, paddingLeft: 0 })
+                                    }}
+                                    isLoading={ loading }
+                                    isDisabled={ false }
+                                />
+                                <CreatableMultiselect
+                                    id="tags-select"
+                                    label="Tags"
+                                    placeholder="Add tags"
+                                    className="multiselect"
+                                    value={ this.state.tags }
+                                    options={ this.state.tags_options }
+                                    onChange={ this.handleChangeTags }
+                                    formatCreateLabel={ ( inputValue ) => `Add tag "${inputValue}"?` }
+                                    styles={{
+                                        valueContainer: ( style ) => ({ ...style, paddingLeft: 0 })
+                                    }}
+                                    isLoading={ loading }
+                                    isDisabled={ false }
+                                />
+                            </>
                         ) }
                     </Query>
                 </TextFieldWrapper>
@@ -248,16 +294,19 @@ class AddRecipe extends PureComponent {
                     <BlockTypeButtons
                         editorState={ this.state.editorState }
                         onToggle={ this.onToggleBlockType }
+                        disabled={ false }
                     />
                     <ActionButtons
                         editorState={ this.state.editorState }
                         onClickUndo={ this.onClickUndo }
                         onClickRedo={ this.onClickRedo }
                         onClickAttach={ this.onClickAttach }
+                        disabled={ false }
                     />
                     <InlineStyleButtons
                         editorState={ this.state.editorState }
                         onToggle={ this.onToggleInlineStyle }
+                        disabled={ false }
                     />
                     <hr />
                     <Editor
@@ -271,6 +320,7 @@ class AddRecipe extends PureComponent {
                         blockStyleFn={ getBlockStyle }
                         plugins={ plugins }
                         ref={ this.editorRef }
+                        readOnly={ false }
                     />
                     <AlignmentTool />
                 </EditorWrapper>
@@ -279,10 +329,24 @@ class AddRecipe extends PureComponent {
                         onClick={ this.handleSave }
                         color="primary"
                         variant="contained"
+                        disabled={ false }
                     >
                         Save
                     </Button>
                 </div>
+                <Snackbar
+                    anchorOrigin={{
+                        vertical: 'bottom',
+                        horizontal: 'left'
+                    }}
+                    open={ this.state.snackbar_open }
+                    onClose={ this.handleSnackbarClose }
+                    autoHideDuration={ 6000 }
+                    ContentProps={{
+                        'aria-describedby': 'message-id'
+                    }}
+                    message={ <span id="message-id">Uploading images. This may take a while...</span> }
+                />
             </Container>
         );
     }

@@ -12,7 +12,7 @@ const INLINE_STYLES = [
     { label: 'Underline', style: 'UNDERLINE', icon: <Underlined /> }
 ];
 
-const InlineStyleButtons = ({ editorState, onToggle }) => {
+const InlineStyleButtons = ({ editorState, onToggle, disabled }) => {
     const currentStyle = editorState.getCurrentInlineStyle();
 
     return (
@@ -24,6 +24,7 @@ const InlineStyleButtons = ({ editorState, onToggle }) => {
                     style={ type.style }
                     icon={ type.icon }
                     onToggle={ onToggle }
+                    disabled={ disabled }
                 />
             )) }
         </div>
@@ -32,7 +33,8 @@ const InlineStyleButtons = ({ editorState, onToggle }) => {
 
 InlineStyleButtons.propTypes = {
     editorState: PropTypes.object.isRequired,
-    onToggle: PropTypes.func.isRequired
+    onToggle: PropTypes.func.isRequired,
+    disabled: PropTypes.bool
 }
 
 export default InlineStyleButtons;
