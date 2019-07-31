@@ -1,38 +1,38 @@
 import styled from 'styled-components';
 
 export const Container = styled.main`
-width: 100vw;
-max-width: 960px;
-display: flex;
-flex-direction: column;
-align-items: center;
-padding-bottom: 50px;
-
-.button-container {
+    width: 100vw;
+    max-width: 960px;
     display: flex;
-    width: 100%;
-    justify-content: flex-end;
+    flex-direction: column;
+    align-items: center;
+    padding-bottom: 50px;
 
-    button {
-        margin-top: 10px;
-        margin-right: 25px;
+    .button-container {
+        display: flex;
+        width: 100%;
+        justify-content: flex-end;
+
+        button {
+            margin-top: 10px;
+            margin-right: 25px;
+        }
     }
-}
 `;
 
 export const TextFieldWrapper = styled.div`
-width: calc( 100% - 2rem);
-box-sizing: border-box;
+    width: calc( 100% - 2rem);
+    box-sizing: border-box;
 
-h6 {
-    color: rgba( 0, 0, 0, 0.54 );
-    font-size: 16px;
-}
+    h6 {
+        color: rgba( 0, 0, 0, 0.54 );
+        font-size: 16px;
+    }
 
-.multiselect {
-    margin-top: 16px;
-    margin-bottom: 8px;
-}
+    .multiselect {
+        margin-top: 16px;
+        margin-bottom: 8px;
+    }
 `;
 
 export const EditorWrapper = styled.div`
