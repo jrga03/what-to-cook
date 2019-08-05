@@ -3,6 +3,7 @@ import PropTypes from 'prop-types';
 import styled from 'styled-components';
 
 const ToolbarButtonSpan = styled.span`
+    font-weight: 600;
     color: #737373;
     margin-right: 16px;
     margin-bottom: 16px;
@@ -14,6 +15,7 @@ const ToolbarButtonSpan = styled.span`
 
     &:hover:not( .disabled ) {
         color: #4d4d4d;
+        font-weight: 900;
 
         svg {
             transform: scale( 1.1 );

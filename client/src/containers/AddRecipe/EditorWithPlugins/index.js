@@ -47,6 +47,7 @@ const plugins = [
  */
 class EditorWithPlugins extends PureComponent {
     static propTypes = {
+        disabled: PropTypes.bool.isRequired,
         dispatchSnackbar: PropTypes.func.isRequired
     }
 
@@ -235,19 +236,19 @@ class EditorWithPlugins extends PureComponent {
                 <BlockTypeButtons
                     editorState={ this.state.editorState }
                     onToggle={ this.onToggleBlockType }
-                    disabled={ false }
+                    disabled={ this.props.disabled }
                 />
                 <ActionButtons
                     editorState={ this.state.editorState }
                     onClickUndo={ this.onClickUndo }
                     onClickRedo={ this.onClickRedo }
                     onClickAttach={ this.onClickAttach }
-                    disabled={ false }
+                    disabled={ this.props.disabled }
                 />
                 <InlineStyleButtons
                     editorState={ this.state.editorState }
                     onToggle={ this.onToggleInlineStyle }
-                    disabled={ false }
+                    disabled={ this.props.disabled }
                 />
                 <hr />
                 <Editor
@@ -261,7 +262,7 @@ class EditorWithPlugins extends PureComponent {
                     blockStyleFn={ getBlockStyle }
                     plugins={ plugins }
                     ref={ this.editorRef }
-                    readOnly={ false }
+                    readOnly={ this.props.disabled }
                 />
                 <AlignmentTool />
             </EditorWrapper>

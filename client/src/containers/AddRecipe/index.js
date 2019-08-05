@@ -1,6 +1,6 @@
 import React, { useState, useMemo, useRef } from 'react';
 import PropTypes from 'prop-types';
-import { useQuery } from 'react-apollo-hooks';
+import { useQuery, useMutation } from 'react-apollo-hooks';
 import { gql } from 'apollo-boost';
 import { withRouter } from 'react-router-dom';
 import { convertToRaw } from 'draft-js';
@@ -34,6 +34,27 @@ const GET_OPTIONS = gql`
     }
 `;
 
+const SAVE_RECIPE = gql`
+    mutation addRecipe(
+        $name: String!,
+        $description: String,
+        $ingredients: [ID],
+        $instructions: String!,
+        $tags: [ID],
+        $newTags: [String]) {
+            addRecipe(
+                name: $name,
+                description: $description,
+                ingredients: $ingredients,
+                instructions: $instructions,
+                tags: $tags,
+                newTags: $newTags
+            ) {
+                id
+            }
+    }
+`;
+
 /**
  *
  * Add Recipe propTypes
@@ -57,12 +78,20 @@ function AddRecipe({ history }) {
     const [ nameError, setNameError ] = useState( false );
     const [ ingredients, setIngredients ] = useState([]);
     const [ tags, setTags ] = useState([]);
+    const [ saving, setSaving ] = useState( false );
 
     const { data, loading } = useQuery( GET_OPTIONS );
+    const saveRecipe = useMutation( SAVE_RECIPE );
 
     const options = useMemo(() => ({
-        ingredients: ( data.ingredients || []).map(( ingredient ) => ({ label: startCase( ingredient.name ), value: ingredient.id })),
-        tags: ( data.tags || []).map(( tag ) => ({ label: startCase( tag.name ), value: tag.id }))
+        ingredients: ( data.ingredients || []).map(( ingredient ) => ({
+            label: startCase( ingredient.name ),
+            value: ingredient.id })
+        ),
+        tags: ( data.tags || []).map(( tag ) => ({
+            label: startCase( tag.name ),
+            value: tag.id
+        }))
     }), [data])
 
     const recipeNameRef = useRef( null );
@@ -154,8 +183,10 @@ function AddRecipe({ history }) {
     /**
      * Save button onClick handler
      */
-    function handleSave() {
+    async function handleSave() {
         if ( checkForm()) {
+            setSaving( true );
+
             const _tags = tags.reduce(( tagsObj, tag ) => {
                 if ( tag.__isNew__ ) {
                     tagsObj.new.push( tag.value );
@@ -181,9 +212,23 @@ function AddRecipe({ history }) {
                 open: true,
                 message: 'Saving recipe...'
             });
-            console.log( payload );
 
-            history.push( '/recipes' );
+            try {
+                const { errors } = await saveRecipe({ variables: payload });
+
+                if ( errors ) {
+                    throw errors;
+                } else {
+                    history.push( '/recipes' )
+                }
+            } catch ( error ) {
+                setSaving( false );
+                setSnackbar({
+                    open: true,
+                    autoHideDuration: 3000,
+                    message: 'Error saving'
+                });
+            }
         }
     }
 
@@ -199,7 +244,7 @@ function AddRecipe({ history }) {
                     error={ nameError }
                     helperText={ nameError && 'Required' }
                     margin="normal"
-                    disabled={ false }
+                    disabled={ saving }
                     value={ name }
                     onChange={ onChangeName }
                     onBlur={ onBlurName }
@@ -213,7 +258,7 @@ function AddRecipe({ history }) {
                     multiline
                     rowsMax={ 4 }
                     margin="normal"
-                    disabled={ false }
+                    disabled={ saving }
                     inputRef={ descriptionRef }
                 />
                 <Multiselect
@@ -229,7 +274,7 @@ function AddRecipe({ history }) {
                         valueContainer: ( style ) => ({ ...style, paddingLeft: 0 })
                     }}
                     isLoading={ loading }
-                    isDisabled={ false }
+                    isDisabled={ saving }
                 />
                 <CreatableMultiselect
                     id="tags-select"
@@ -244,7 +289,7 @@ function AddRecipe({ history }) {
                         valueContainer: ( style ) => ({ ...style, paddingLeft: 0 })
                     }}
                     isLoading={ loading }
-                    isDisabled={ false }
+                    isDisabled={ saving }
                 />
             </TextFieldWrapper>
             <br />
@@ -253,13 +298,13 @@ function AddRecipe({ history }) {
                     Instructions
                 </Typography>
             </TextFieldWrapper>
-            <EditorWithPlugins dispatchSnackbar={ dispatchSnackbar } ref={ editorRef } />
+            <EditorWithPlugins disabled={ saving } dispatchSnackbar={ dispatchSnackbar } ref={ editorRef } />
             <div className="button-container">
                 <Button
                     onClick={ handleSave }
                     color="primary"
                     variant="contained"
-                    disabled={ false }
+                    disabled={ saving }
                 >
                     Save
                 </Button>
@@ -275,6 +320,7 @@ function AddRecipe({ history }) {
                     'aria-describedby': 'message-id'
                 }}
                 message={ <span id="message-id">{ snackbar.message }</span> }
+                autoHideDuration={ snackbar.autoHideDuration || null }
             />
         </Container>
     );
