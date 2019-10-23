@@ -7,6 +7,7 @@ import styled from 'styled-components';
 import NotFoundPage from 'containers/NotFoundPage';
 import ComingSoon from 'containers/ComingSoon';
 import Header from 'containers/Header';
+import Recipes from 'containers/Recipes';
 
 const Dashboard = lazy(() => import( 'containers/Dashboard' ));
 const AddRecipe =  lazy(() => import( 'containers/AddRecipe' ));
@@ -50,7 +51,8 @@ function App () {
                 <Switch>
                     <Route exact path="/" component={ Dashboard } />
                     <Route exact path="/recipe/add" component={ AddRecipe } />
-                    <Route path="/recipes" component={ ComingSoon } />
+                    <Route exact path="/recipes" component={ Recipes } />
+                    <Route exact path="/coming-soon" component={ ComingSoon } />
                     <Route component={ NotFoundPage } />
                 </Switch>
             </Suspense>
