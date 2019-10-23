@@ -9,6 +9,7 @@ import Typography from '@material-ui/core/Typography';
 import Button from '@material-ui/core/Button';
 import Snackbar from '@material-ui/core/Snackbar';
 import startCase from 'lodash/startCase';
+import get from 'lodash/get';
 
 /* eslint-disable import/no-unresolved */
 import Multiselect from 'components/Multiselect';
@@ -84,11 +85,11 @@ function AddRecipe({ history }) {
     const saveRecipe = useMutation( SAVE_RECIPE );
 
     const options = useMemo(() => ({
-        ingredients: ( data.ingredients || []).map(( ingredient ) => ({
+        ingredients: ( get( data, 'ingredients', [])).map(( ingredient ) => ({
             label: startCase( ingredient.name ),
             value: ingredient.id })
         ),
-        tags: ( data.tags || []).map(( tag ) => ({
+        tags: ( get( data, 'tags', [])).map(( tag ) => ({
             label: startCase( tag.name ),
             value: tag.id
         }))
