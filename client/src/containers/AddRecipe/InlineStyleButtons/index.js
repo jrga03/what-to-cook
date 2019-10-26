@@ -4,7 +4,7 @@ import Bold from '@material-ui/icons/FormatBold';
 import Italic from '@material-ui/icons/FormatItalic';
 import Underlined from '@material-ui/icons/FormatUnderlined';
 
-import ToolbarButton from '../ToolbarButton';
+import ToolbarButton from 'components/ToolbarButton'; // eslint-disable-line import/no-unresolved
 
 const INLINE_STYLES = [
     { label: 'Bold', style: 'BOLD', icon: <Bold /> },

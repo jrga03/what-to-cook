@@ -4,7 +4,7 @@ import BlockQuote from '@material-ui/icons/FormatQuote';
 import Bulleted from '@material-ui/icons/FormatListBulleted';
 import Numbered from '@material-ui/icons/FormatListNumbered';
 
-import ToolbarButton from '../ToolbarButton';
+import ToolbarButton from 'components/ToolbarButton'; // eslint-disable-line import/no-unresolved
 
 const BLOCK_TYPES = [
     [

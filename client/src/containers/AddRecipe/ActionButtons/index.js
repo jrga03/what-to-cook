@@ -4,7 +4,7 @@ import Undo from '@material-ui/icons/Undo';
 import Redo from '@material-ui/icons/Redo';
 import AttachFile from '@material-ui/icons/AttachFile';
 
-import ToolbarButton from '../ToolbarButton';
+import ToolbarButton from 'components/ToolbarButton';  // eslint-disable-line import/no-unresolved
 
 const ActionButtons = ({ editorState, onClickUndo, onClickRedo, onClickAttach, disabled }) => {
     const undoStack = editorState.getUndoStack();

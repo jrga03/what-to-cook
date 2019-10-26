@@ -10,7 +10,7 @@ import Header from 'containers/Header';
 import Recipes from 'containers/Recipes';
 
 const Dashboard = lazy(() => import( 'containers/Dashboard' ));
-const AddRecipe =  lazy(() => import( 'containers/AddRecipe' ));
+const AddRecipe = lazy(() => import( 'containers/AddRecipe' ));
 
 const Container = styled.div`
     display: flex;
