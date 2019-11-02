@@ -80,6 +80,7 @@ function AddRecipe({ history }) {
     const [ ingredients, setIngredients ] = useState([]);
     const [ tags, setTags ] = useState([]);
     const [ saving, setSaving ] = useState( false );
+    const [ uploading, setUploading ] = useState( false );
 
     const { data, loading } = useQuery( GET_OPTIONS );
     const saveRecipe = useMutation( SAVE_RECIPE );
@@ -185,6 +186,15 @@ function AddRecipe({ history }) {
      * Save button onClick handler
      */
     async function handleSave() {
+        if ( uploading ) {
+            setSnackbar({
+                open: true,
+                autoHideDuration: 3000,
+                message: 'There are still files being uploaded.'
+            });
+            return;
+        }
+
         if ( checkForm()) {
             setSaving( true );
 
@@ -227,7 +237,8 @@ function AddRecipe({ history }) {
                 setSnackbar({
                     open: true,
                     autoHideDuration: 3000,
-                    message: 'Error saving'
+                    message: 'Error saving',
+                    type: 'error'
                 });
             }
         }
@@ -299,7 +310,12 @@ function AddRecipe({ history }) {
                     Instructions
                 </Typography>
             </TextFieldWrapper>
-            <EditorWithPlugins disabled={ saving } dispatchSnackbar={ dispatchSnackbar } ref={ editorRef } />
+            <EditorWithPlugins
+                disabled={ saving }
+                dispatchSnackbar={ dispatchSnackbar }
+                setUploading={ setUploading }
+                ref={ editorRef }
+            />
             <div className="button-container">
                 <Button
                     onClick={ handleSave }
@@ -311,6 +327,7 @@ function AddRecipe({ history }) {
                 </Button>
             </div>
             <Snackbar
+                key={ snackbar.message }
                 anchorOrigin={{
                     vertical: 'bottom',
                     horizontal: 'left'
@@ -318,7 +335,10 @@ function AddRecipe({ history }) {
                 open={ snackbar.open }
                 onClose={ handleSnackbarClose }
                 ContentProps={{
-                    'aria-describedby': 'message-id'
+                    'aria-describedby': 'message-id',
+                    style: snackbar.type === 'error' ? {
+                        backgroundColor: '#ff5252'
+                    } : {}
                 }}
                 message={ <span id="message-id">{ snackbar.message }</span> }
                 autoHideDuration={ snackbar.autoHideDuration || null }

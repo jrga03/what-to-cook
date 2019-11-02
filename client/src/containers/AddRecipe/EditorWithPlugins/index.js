@@ -13,6 +13,10 @@ import createResizeablePlugin from 'draft-js-resizeable-plugin';
 import createBlockDndPlugin from 'draft-js-drag-n-drop-plugin';
 import imageCompression from 'browser-image-compression';
 
+/* eslint-disable import/no-unresolved */
+import upload from 'utils/upload';
+/* eslint-enable import/no-unresolved */
+
 import BlockTypeButtons from '../BlockTypeButtons';
 import InlineStyleButtons from '../InlineStyleButtons';
 import ActionButtons from '../ActionButtons';
@@ -47,8 +51,13 @@ const plugins = [
  */
 class EditorWithPlugins extends PureComponent {
     static propTypes = {
-        disabled: PropTypes.bool.isRequired,
-        dispatchSnackbar: PropTypes.func.isRequired
+        disabled: PropTypes.bool,
+        dispatchSnackbar: PropTypes.func.isRequired,
+        setUploading: PropTypes.func.isRequired
+    }
+
+    static defaultProps = {
+        disabled: false
     }
 
     state = {
@@ -100,16 +109,18 @@ class EditorWithPlugins extends PureComponent {
     }
 
     onAttachFile = async ( event ) => {
+        this.props.setUploading( true );
         this.props.dispatchSnackbar({
             open: true,
             message: `Attaching ${event.target.files.length > 1 ? 'files' : 'file'}...`
         });
 
         for ( const file of event.target.files ) {
-            const convertedImage = await this.convertImageToBase64( file ); // eslint-disable-line
-            this.addImageToEditor( convertedImage );
+            const uploadedImage = await this.uploadFile( file ); // eslint-disable-line
+            uploadedImage && this.addImageToEditor( uploadedImage );
         }
 
+        this.props.setUploading( false );
         this.props.dispatchSnackbar({
             open: false,
             message: ''
@@ -121,14 +132,16 @@ class EditorWithPlugins extends PureComponent {
     onBlurInput = ( event ) => this.setState({ [ `${event.target.name}_error` ]: !event.target.value })
 
     handlePastedFile = async ([file]) => {
+        this.props.setUploading( true );
         this.props.dispatchSnackbar({
             open: true,
             message: 'Attaching file...'
         });
 
-        const convertedImage = await this.convertImageToBase64( file );
-        this.addImageToEditor( convertedImage );
+        const uploadedImage = await this.uploadFile( file );
+        uploadedImage && this.addImageToEditor( uploadedImage );
 
+        this.props.setUploading( false );
         this.props.dispatchSnackbar({
             open: false,
             message: ''
@@ -136,6 +149,7 @@ class EditorWithPlugins extends PureComponent {
     }
 
     handleDroppedFiles = async ( selectionState, files ) => {
+        this.props.setUploading( true );
         this.props.dispatchSnackbar({
             open: true,
             message: `Attaching ${files.length > 1 ? 'files' : 'file'}...`
@@ -143,11 +157,12 @@ class EditorWithPlugins extends PureComponent {
 
         for ( const file of files ) {
             if ([ 'image/png', 'image/jpeg' ].includes( file.type )) {
-                const convertedImage = await this.convertImageToBase64( file ); // eslint-disable-line
-                this.addImageToEditor( convertedImage );
+                const uploadedImage = await this.uploadFile( file ); // eslint-disable-line
+                uploadedImage && this.addImageToEditor( uploadedImage );
             }
         }
 
+        this.props.setUploading( false );
         this.props.dispatchSnackbar({
             open: false,
             message: ''
@@ -155,24 +170,33 @@ class EditorWithPlugins extends PureComponent {
     }
 
     async compressImage( image ) {
+        // Image less than 2 Mb
+        if ( image.size < 2097152 ) return image;
+
         const options = {
-            maxSizeMB: 0.1
+            maxSizeMB: 2
         }
         const compressed = await imageCompression( image, options );
         return compressed;
     }
 
-    convertImageToBase64 = ( file ) => new Promise( async ( resolve, reject ) => {
+    async uploadFile( file ) {
         try {
-            const reader = new FileReader();
-            reader.onloadend = ( event ) => {
-                resolve( event.target.result );
-            }
-            reader.readAsDataURL( await this.compressImage( file ));
+            const { data } = await upload(
+                await this.compressImage( file ),
+                { folder: 'recipes' }
+            );
+
+            return data.secure_url;
         } catch ( error ) {
-            reject( error );
+            this.props.dispatchSnackbar({
+                open: true,
+                message: 'Uploading image failed. Try again.',
+                type: 'error'
+            });
+            return '';
         }
-    })
+    }
 
     addImageToEditor = ( image ) => {
         const contentState = this.state.editorState.getCurrentContent()
