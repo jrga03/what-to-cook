@@ -5,6 +5,7 @@ const { Schema } = mongoose;
 const RecipeSchema = new Schema({
     name: { type: String },
     description: { type: String },
+    photo: { type: String },
     ingredients: [{
         type: Schema.Types.ObjectId,
         ref: 'ingredient'
@@ -84,11 +85,11 @@ RecipeSchema.statics.addIngredientToRecipe = async ( ingredientIds, recipeId ) =
     }
 }
 
-RecipeSchema.statics.addRecipe = async ({ name, description = '', ingredients = [], instructions, tags = [], newTags = []}) => {
+RecipeSchema.statics.addRecipe = async ({ name, description = '', photo, ingredients = [], instructions, tags = [], newTags = []}) => {
     const Recipe = mongoose.model( 'recipe' );
 
     try {
-        const recipe = new Recipe({ name, description, ingredients, instructions, tags });
+        const recipe = new Recipe({ name, description, photo, ingredients, instructions, tags });
 
         const promises = [recipe.save()];
 

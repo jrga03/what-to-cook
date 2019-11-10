@@ -33,6 +33,7 @@ const RecipeType = new GraphQLObjectType({
         id: { type: GraphQLID },
         name: { type: GraphQLString },
         description: { type: GraphQLString },
+        photo: { type: GraphQLString },
         ingredients: {
             type: GraphQLList( IngredientType ),
             description: '',
@@ -127,6 +128,7 @@ const mutation = new GraphQLObjectType({
             args: {
                 name: { type: GraphQLNonNull( GraphQLString ) },
                 description: { type: GraphQLString },
+                photo: { type: GraphQLNonNull( GraphQLString ) },
                 ingredients: { type: GraphQLList( GraphQLID ) },
                 instructions: { type: GraphQLNonNull( GraphQLString ) },
                 tags: { type: GraphQLList( GraphQLID ) },
@@ -142,6 +144,7 @@ const mutation = new GraphQLObjectType({
                 id: { type: GraphQLNonNull( GraphQLID ) },
                 name: { type: GraphQLString },
                 description: { type: GraphQLString },
+                photo: { type: GraphQLNonNull( GraphQLString ) },
                 ingredients: { type: GraphQLList( GraphQLID ) },
                 instructions: { type: GraphQLNonNull( GraphQLString ) },
                 tags: { type: GraphQLList( GraphQLID ) },
