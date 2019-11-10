@@ -52,6 +52,7 @@ function App () {
                     <Route exact path="/" component={ Dashboard } />
                     <Route exact path="/recipe/add" component={ AddRecipe } />
                     <Route exact path="/recipes" component={ Recipes } />
+                    <Route exact path="/recipes/*" component={ ComingSoon } />
                     <Route exact path="/coming-soon" component={ ComingSoon } />
                     <Route component={ NotFoundPage } />
                 </Switch>

@@ -1,6 +1,6 @@
 import React from 'react';
 import { withRouter } from 'react-router-dom';
-import { useQuery } from 'react-apollo-hooks';
+import { useQuery } from '@apollo/react-hooks';
 import { gql } from 'apollo-boost';
 
 const GET_RECIPES = gql`
@@ -9,6 +9,7 @@ const GET_RECIPES = gql`
             id
             name
             description
+            photo
         }
     }
 `;
