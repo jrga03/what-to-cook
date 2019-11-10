@@ -247,13 +247,8 @@ function AddRecipe({ history }) {
             });
 
             try {
-                const [ , { errors }] = await saveRecipe({ variables: payload });
-
-                if ( errors ) {
-                    throw errors;
-                } else {
-                    history.push( '/recipes' )
-                }
+                await saveRecipe({ variables: payload });
+                history.push( '/recipes' )
             } catch ( error ) {
                 setSnackbar({
                     open: true,
