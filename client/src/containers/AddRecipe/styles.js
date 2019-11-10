@@ -33,6 +33,15 @@ export const TextFieldWrapper = styled.div`
         margin-top: 16px;
         margin-bottom: 8px;
     }
+
+    .file-input {
+        display: none;
+    }
+
+    .circular-progress {
+        position: absolute;
+        color: #3f51b5;
+    }
 `;
 
 export const EditorWrapper = styled.div`

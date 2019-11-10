@@ -1,6 +1,6 @@
 import React, { useState, useMemo, useRef } from 'react';
 import PropTypes from 'prop-types';
-import { useQuery, useMutation } from 'react-apollo-hooks';
+import { useQuery, useMutation } from '@apollo/react-hooks';
 import { gql } from 'apollo-boost';
 import { withRouter } from 'react-router-dom';
 import { convertToRaw } from 'draft-js';
@@ -8,12 +8,17 @@ import TextField from '@material-ui/core/TextField';
 import Typography from '@material-ui/core/Typography';
 import Button from '@material-ui/core/Button';
 import Snackbar from '@material-ui/core/Snackbar';
+import IconButton from '@material-ui/core/IconButton';
+import CircularProgress from '@material-ui/core/CircularProgress';
+import Camera from '@material-ui/icons/PhotoCameraOutlined';
+import Check from '@material-ui/icons/Check';
 import startCase from 'lodash/startCase';
 import get from 'lodash/get';
 
 /* eslint-disable import/no-unresolved */
 import Multiselect from 'components/Multiselect';
 import CreatableMultiselect from 'components/Multiselect/Creatable';
+import { upload, compressImage } from 'utils/fileHelper';
 /* eslint-enable import/no-unresolved */
 
 import EditorWithPlugins from './EditorWithPlugins';
@@ -39,6 +44,7 @@ const SAVE_RECIPE = gql`
     mutation addRecipe(
         $name: String!,
         $description: String,
+        $photo: String!,
         $ingredients: [ID],
         $instructions: String!,
         $tags: [ID],
@@ -46,6 +52,7 @@ const SAVE_RECIPE = gql`
             addRecipe(
                 name: $name,
                 description: $description,
+                photo: $photo,
                 ingredients: $ingredients,
                 instructions: $instructions,
                 tags: $tags,
@@ -77,13 +84,16 @@ function AddRecipe({ history }) {
     });
     const [ name, setName ] = useState( '' );
     const [ nameError, setNameError ] = useState( false );
+    const [ photoUrlError, setPhotoUrlError ] = useState( false );
     const [ ingredients, setIngredients ] = useState([]);
     const [ tags, setTags ] = useState([]);
-    const [ saving, setSaving ] = useState( false );
+    const [ photoUrl, setPhotoUrl ] = useState( null );
+    const [ photoName, setPhotoName ] = useState( '' );
     const [ uploading, setUploading ] = useState( false );
+    const [ editorUploading, setEditorUploading ] = useState( false );
 
     const { data, loading } = useQuery( GET_OPTIONS );
-    const saveRecipe = useMutation( SAVE_RECIPE );
+    const [ saveRecipe, { loading: saving }] = useMutation( SAVE_RECIPE );
 
     const options = useMemo(() => ({
         ingredients: ( get( data, 'ingredients', [])).map(( ingredient ) => ({
@@ -97,8 +107,10 @@ function AddRecipe({ history }) {
     }), [data])
 
     const recipeNameRef = useRef( null );
+    const photoUrlRef = useRef( null );
     const descriptionRef = useRef( null );
     const editorRef = useRef( null );
+    const fileInputRef = useRef( null );
 
     /**
      * Recipe name input onChange handler
@@ -121,7 +133,13 @@ function AddRecipe({ history }) {
      * @param {Object} ref - Component ref
      */
     function scrollToRef( ref ) {
-        window.scrollTo( 0, ref.current.offsetTop );
+        const { top, height } = ref.current.getBoundingClientRect();
+        const headerHeight = window.innerWidth < 600 ? 56 : 64;
+
+        window.scrollTo({
+            top: window.scrollY + top - height - headerHeight,
+            behavior: 'smooth'
+        });
     }
 
     /**
@@ -173,10 +191,15 @@ function AddRecipe({ history }) {
         let valid = true;
 
         if ( !name ) {
+            scrollToRef( recipeNameRef );
             valid = false;
             setNameError( true );
-            scrollToRef( recipeNameRef );
-            recipeNameRef.current.focus();
+        }
+
+        if ( !photoUrl ) {
+            valid && scrollToRef( photoUrlRef );
+            valid = false;
+            setPhotoUrlError( true );
         }
 
         return valid;
@@ -186,7 +209,7 @@ function AddRecipe({ history }) {
      * Save button onClick handler
      */
     async function handleSave() {
-        if ( uploading ) {
+        if ( editorUploading ) {
             setSnackbar({
                 open: true,
                 autoHideDuration: 3000,
@@ -196,8 +219,6 @@ function AddRecipe({ history }) {
         }
 
         if ( checkForm()) {
-            setSaving( true );
-
             const _tags = tags.reduce(( tagsObj, tag ) => {
                 if ( tag.__isNew__ ) {
                     tagsObj.new.push( tag.value );
@@ -213,6 +234,7 @@ function AddRecipe({ history }) {
             const payload = {
                 name,
                 description: descriptionRef.current.value,
+                photo: photoUrl,
                 ingredients: ingredients.map(( ingredient ) => ingredient.value ),
                 instructions: JSON.stringify( convertToRaw( editorRef.current.state.editorState.getCurrentContent())),
                 tags: _tags.existing,
@@ -225,7 +247,7 @@ function AddRecipe({ history }) {
             });
 
             try {
-                const { errors } = await saveRecipe({ variables: payload });
+                const [ , { errors }] = await saveRecipe({ variables: payload });
 
                 if ( errors ) {
                     throw errors;
@@ -233,7 +255,6 @@ function AddRecipe({ history }) {
                     history.push( '/recipes' )
                 }
             } catch ( error ) {
-                setSaving( false );
                 setSnackbar({
                     open: true,
                     autoHideDuration: 3000,
@@ -241,6 +262,57 @@ function AddRecipe({ history }) {
                     type: 'error'
                 });
             }
+        }
+    }
+
+    /**
+     * Triggers opening of file select window
+     */
+    function selectFile() {
+        fileInputRef && fileInputRef.current && fileInputRef.current.click();
+    }
+
+    /**
+     * Handles uploading of image file
+     *
+     * @param {File} file - File to upload
+     * @returns {string} Uploaded image url or empty string
+     */
+    async function uploadFile( file ) {
+        setUploading( true );
+
+        try {
+            const uploaded = await upload(
+                await compressImage( file ),
+                { folder: 'recipe_thumbnails' }
+            );
+
+            return uploaded.data.secure_url;
+        } catch ( error ) {
+            setSnackbar({
+                open: true,
+                message: 'Uploading image failed. Try again.',
+                type: 'error'
+            });
+            return '';
+        } finally {
+            setUploading( false );
+        }
+    }
+
+    /**
+     * On change handler for file input
+     *
+     * @param {Object} event - onChange event
+     */
+    async function onChangeFileInput( event ) {
+        const [file] = event.target.files;
+
+        if ( file ) {
+            const url = await uploadFile( file );
+            setPhotoUrl( url );
+            setPhotoUrlError( false );
+            setPhotoName( get( file, 'name', '' ));
         }
     }
 
@@ -262,6 +334,7 @@ function AddRecipe({ history }) {
                     onBlur={ onBlurName }
                     inputRef={ recipeNameRef }
                 />
+
                 <TextField
                     id="recipe-description-text-field"
                     label="Description"
@@ -273,6 +346,52 @@ function AddRecipe({ history }) {
                     disabled={ saving }
                     inputRef={ descriptionRef }
                 />
+
+                <TextField
+                    id="recipe-photo-text-field"
+                    label="Photo"
+                    name="photo"
+                    required
+                    fullWidth
+                    margin="normal"
+                    value={ photoName }
+                    error={ photoUrlError }
+                    helperText={ photoUrlError && 'Required' }
+                    onClick={ selectFile }
+                    disabled={ saving || uploading }
+                    InputProps={{
+                        endAdornment: (
+                            <IconButton
+                                size="small"
+                                disabled={ saving || uploading }
+                                color={ photoUrl ? 'secondary' : 'primary' }
+                            >
+                                { photoUrl
+                                    ? <Check />
+                                    : <Camera color={ photoUrlError ? 'error' : 'inherit' } />
+                                }
+                                { uploading && (
+                                    <CircularProgress
+                                        className="circular-progress"
+                                        size={ 30 }
+                                    />
+                                ) }
+                            </IconButton>
+                        ),
+                        readOnly: true
+                    }}
+                    inputRef={ photoUrlRef }
+                />
+                <input
+                    id="file-input"
+                    className="file-input"
+                    type="file"
+                    accept="image/*"
+                    capture="environment"
+                    onChange={ onChangeFileInput }
+                    ref={ fileInputRef }
+                />
+
                 <Multiselect
                     id="recipe-ingredients-select"
                     label="Ingredients"
@@ -288,6 +407,7 @@ function AddRecipe({ history }) {
                     isLoading={ loading }
                     isDisabled={ saving }
                 />
+
                 <CreatableMultiselect
                     id="tags-select"
                     label="Tags"
@@ -304,18 +424,22 @@ function AddRecipe({ history }) {
                     isDisabled={ saving }
                 />
             </TextFieldWrapper>
+
             <br />
+
             <TextFieldWrapper>
                 <Typography variant="h6">
                     Instructions
                 </Typography>
             </TextFieldWrapper>
+
             <EditorWithPlugins
                 disabled={ saving }
                 dispatchSnackbar={ dispatchSnackbar }
-                setUploading={ setUploading }
+                setUploading={ setEditorUploading }
                 ref={ editorRef }
             />
+
             <div className="button-container">
                 <Button
                     onClick={ handleSave }
@@ -326,6 +450,7 @@ function AddRecipe({ history }) {
                     Save
                 </Button>
             </div>
+
             <Snackbar
                 key={ snackbar.message }
                 anchorOrigin={{

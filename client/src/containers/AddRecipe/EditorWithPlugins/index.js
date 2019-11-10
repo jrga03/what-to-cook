@@ -11,10 +11,9 @@ import createAlignmentPlugin from 'draft-js-alignment-plugin';
 import createFocusPlugin from 'draft-js-focus-plugin';
 import createResizeablePlugin from 'draft-js-resizeable-plugin';
 import createBlockDndPlugin from 'draft-js-drag-n-drop-plugin';
-import imageCompression from 'browser-image-compression';
 
 /* eslint-disable import/no-unresolved */
-import upload from 'utils/upload';
+import { upload, compressImage } from 'utils/fileHelper';
 /* eslint-enable import/no-unresolved */
 
 import BlockTypeButtons from '../BlockTypeButtons';
@@ -169,21 +168,10 @@ class EditorWithPlugins extends PureComponent {
         });
     }
 
-    async compressImage( image ) {
-        // Image less than 2 Mb
-        if ( image.size < 2097152 ) return image;
-
-        const options = {
-            maxSizeMB: 2
-        }
-        const compressed = await imageCompression( image, options );
-        return compressed;
-    }
-
     async uploadFile( file ) {
         try {
             const { data } = await upload(
-                await this.compressImage( file ),
+                await compressImage( file ),
                 { folder: 'recipes' }
             );
 
