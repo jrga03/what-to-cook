@@ -286,6 +286,7 @@ function AddRecipe({ history }) {
         } catch ( error ) {
             setSnackbar({
                 open: true,
+                autoHideDuration: 3000,
                 message: 'Uploading image failed. Try again.',
                 type: 'error'
             });

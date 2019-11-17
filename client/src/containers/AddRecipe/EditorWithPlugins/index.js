@@ -179,6 +179,7 @@ class EditorWithPlugins extends PureComponent {
         } catch ( error ) {
             this.props.dispatchSnackbar({
                 open: true,
+                autoHideDuration: 3000,
                 message: 'Uploading image failed. Try again.',
                 type: 'error'
             });

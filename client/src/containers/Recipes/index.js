@@ -18,12 +18,12 @@ const GET_RECIPES = gql`
  * Recipes component
  */
 function Recipes() {
-    const { data, loading } = useQuery( GET_RECIPES );
+    const { data, loading } = useQuery( GET_RECIPES, { pollInterval: 60000 });
 
     if ( loading ) {
         return (
             <h1>
-                Loading
+                Loading...
             </h1>
         );
     }
