@@ -36,9 +36,10 @@
         "react-device-detect": "1.6.5",
         "react-dom": "16.8.6",
         "react-helmet": "5.2.1",
-        "react-router-dom": "5.0.1",
+        "react-router-dom": "5.1.2",
         "react-scripts": "3.0.1",
         "react-select": "3.0.4",
+        "react-swipeable-views": "0.13.3",
         "styled-components": "4.3.2"
     },
     "devDependencies": {

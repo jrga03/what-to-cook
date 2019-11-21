@@ -16,6 +16,7 @@ const Container = styled.div`
     display: flex;
     flex-direction: column;
     align-items: center;
+    background-color: #eaeaea;
 
     @media screen and (min-width: 600px) {
         padding-top: 64px;

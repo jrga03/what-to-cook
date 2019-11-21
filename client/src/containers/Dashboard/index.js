@@ -1,39 +1,59 @@
-import React from 'react';
-import PropTypes from 'prop-types';
-import { withRouter } from 'react-router-dom';
-import Typography from '@material-ui/core/Typography';
+import React, { useState } from 'react';
+// import { useHistory } from 'react-router-dom';
+import SwipeableViews from 'react-swipeable-views';
+import Paper from '@material-ui/core/Paper';
+import Tabs from '@material-ui/core/Tabs';
+import Tab from '@material-ui/core/Tab';
 
-import { Wrapper, StyledButtonBase } from './styles';
+import Categories from '../Categories';
+import ComingSoon from '../ComingSoon';
 
-const CATEGORIES = [ 'Pork', 'Chicken', 'Beef', 'Seafood', 'Pasta', 'Vegetables', 'Beverages', 'Desserts', 'Others' ];
+import Wrapper from './styles';
 
 /**
  * Dashboard
  */
-function Dashboard( props ) {
+function Dashboard() {
+    // const history = useHistory();
+    const [ activeTab, setActiveTab ] = useState( 0 );
+
+    /**
+     * Handler for tab change
+     * @param {*} event - onChange event
+     * @param {number} newValue - Index of the tab
+     */
+    function onChange( event, newValue ) {
+        setActiveTab( newValue );
+    }
+
+    /**
+     * Handler for swipe
+     * @param {number} index - Index of the tab
+     */
+    function onChangeIndex( index ) {
+        setActiveTab( index );
+    }
+
     return (
         <Wrapper>
-            <ul>
-                { CATEGORIES.map(( category ) => (
-                    <StyledButtonBase
-                        key={ category }
-                        component="li"
-                        onClick={ () => props.history.push( `/recipes/${category}`.toLowerCase()) }
-                    >
-                        <div>
-                            <Typography variant="h6">
-                                { category }
-                            </Typography>
-                        </div>
-                    </StyledButtonBase>
-                )) }
-            </ul>
+            <Paper square elevation={ 2 }>
+                <Tabs
+                    value={ activeTab }
+                    onChange={ onChange }
+                    indicatorColor="primary"
+                    textColor="primary"
+                    variant="fullWidth"
+                >
+                    <Tab label="Categories" />
+                    <Tab label="Ingredients" />
+                </Tabs>
+            </Paper>
+            <SwipeableViews index={ activeTab } onChangeIndex={ onChangeIndex }>
+                <Categories />
+                <ComingSoon />
+            </SwipeableViews>
         </Wrapper>
     );
 }
 
-Dashboard.propTypes = {
-    history: PropTypes.object.isRequired
-}
-
-export default withRouter( Dashboard )
+export default Dashboard;
