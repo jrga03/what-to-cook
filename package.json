@@ -20,7 +20,7 @@
     },
     "homepage": "https://what-to-cook-app.herokuapp.com/",
     "dependencies": {
-        "connect-mongo": "2.0.3",
+        "connect-mongo": "3.1.2",
         "express": "4.16.4",
         "express-graphql": "0.7.1",
         "express-session": "1.15.6",
