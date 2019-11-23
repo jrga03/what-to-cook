@@ -1,7 +1,7 @@
 /* eslint-disable import/no-unresolved */
 import React, { lazy, Suspense } from 'react';
 import { Helmet } from 'react-helmet';
-import { Switch, Route } from 'react-router';
+import { Switch, Route, Redirect } from 'react-router';
 import styled from 'styled-components';
 
 import NotFoundPage from 'containers/NotFoundPage';
@@ -50,7 +50,10 @@ function App () {
             <Header />
             <Suspense fallback={ <Wrapper>Loading...</Wrapper> }>
                 <Switch>
-                    <Route exact path="/" component={ Dashboard } />
+                    <Route exact path="/">
+                        <Redirect to="/categories" />
+                    </Route>
+                    <Route exact path={ [ '/categories', '/ingredients' ] } component={ Dashboard } />
                     <Route exact path="/recipe/add" component={ AddRecipe } />
                     <Route exact path="/recipes" component={ Recipes } />
                     <Route exact path="/recipes/*" component={ ComingSoon } />

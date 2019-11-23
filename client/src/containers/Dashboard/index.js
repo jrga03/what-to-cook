@@ -1,6 +1,5 @@
 import React, { useState } from 'react';
-// import { useHistory } from 'react-router-dom';
-import SwipeableViews from 'react-swipeable-views';
+import { Switch, Link, Route } from 'react-router-dom';
 import Paper from '@material-ui/core/Paper';
 import Tabs from '@material-ui/core/Tabs';
 import Tab from '@material-ui/core/Tab';
@@ -14,7 +13,6 @@ import Wrapper from './styles';
  * Dashboard
  */
 function Dashboard() {
-    // const history = useHistory();
     const [ activeTab, setActiveTab ] = useState( 0 );
 
     /**
@@ -24,14 +22,6 @@ function Dashboard() {
      */
     function onChange( event, newValue ) {
         setActiveTab( newValue );
-    }
-
-    /**
-     * Handler for swipe
-     * @param {number} index - Index of the tab
-     */
-    function onChangeIndex( index ) {
-        setActiveTab( index );
     }
 
     return (
@@ -44,14 +34,24 @@ function Dashboard() {
                     textColor="primary"
                     variant="fullWidth"
                 >
-                    <Tab label="Categories" />
-                    <Tab label="Ingredients" />
+                    <Tab
+                        label="Categories"
+                        component={ Link }
+                        to="/categories"
+                        replace
+                    />
+                    <Tab
+                        label="Ingredients"
+                        component={ Link }
+                        to="/ingredients"
+                        replace
+                    />
                 </Tabs>
             </Paper>
-            <SwipeableViews index={ activeTab } onChangeIndex={ onChangeIndex }>
-                <Categories />
-                <ComingSoon />
-            </SwipeableViews>
+            <Switch>
+                <Route path="/categories" component={ Categories } />
+                <Route path="/ingredients" component={ ComingSoon } />
+            </Switch>
         </Wrapper>
     );
 }
