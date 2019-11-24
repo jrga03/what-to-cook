@@ -1,5 +1,6 @@
 import React, { useCallback } from 'react';
 import { useHistory } from 'react-router-dom';
+import Fade from '@material-ui/core/Fade';
 import GridList from '@material-ui/core/GridList';
 import GridListTile from '@material-ui/core/GridListTile';
 
@@ -20,18 +21,20 @@ function Categories() {
 
     return (
         <Wrapper>
-            <GridList cols={ 2 } cellHeight="auto" spacing={ 4 }>
-                { CATEGORIES.map(({ key, label }) => (
-                    <GridListTile key={ key }>
-                        <ItemCard
-                            label={ label }
-                            image={ burger } // TODO:
-                            imageTitle="Burger" // TODO:
-                            onClick={ navigate( key ) }
-                        />
-                    </GridListTile>
-                )) }
-            </GridList>
+            <Fade in>
+                <GridList cols={ 2 } cellHeight="auto" spacing={ 4 }>
+                    { CATEGORIES.map(({ key, label }) => (
+                        <GridListTile key={ key }>
+                            <ItemCard
+                                label={ label }
+                                image={ burger } // TODO:
+                                imageTitle="Burger" // TODO:
+                                onClick={ navigate( key ) }
+                            />
+                        </GridListTile>
+                    )) }
+                </GridList>
+            </Fade>
         </Wrapper>
     );
 }

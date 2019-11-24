@@ -1,8 +1,21 @@
 import styled from 'styled-components';
 
 const Wrapper = styled.div`
-    max-width: 960px;
     width: 100vw;
+
+    .content {
+        overflow-y: scroll;
+        overflow-x: hidden;
+        height: calc( 100vh - 104px );
+
+        @media screen and (orientation: landscape) {
+            height: calc( 100vh - 96px );
+        }
+
+        @media screen and (min-width: 600px) {
+            height: calc( 100vh - 112px );
+        }
+    }
 `;
 
 export default Wrapper;

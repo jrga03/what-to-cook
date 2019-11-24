@@ -1,11 +1,11 @@
 import React, { useState } from 'react';
-import { Switch, Link, Route } from 'react-router-dom';
+import { Switch, Link, Route, useLocation } from 'react-router-dom';
 import Paper from '@material-ui/core/Paper';
 import Tabs from '@material-ui/core/Tabs';
 import Tab from '@material-ui/core/Tab';
 
 import Categories from '../Categories';
-import ComingSoon from '../ComingSoon';
+import Ingredients from '../Ingredients';
 
 import Wrapper from './styles';
 
@@ -13,7 +13,8 @@ import Wrapper from './styles';
  * Dashboard
  */
 function Dashboard() {
-    const [ activeTab, setActiveTab ] = useState( 0 );
+    const { pathname } = useLocation();
+    const [ activeTab, setActiveTab ] = useState( Number( pathname === '/ingredients' ));
 
     /**
      * Handler for tab change
@@ -48,10 +49,12 @@ function Dashboard() {
                     />
                 </Tabs>
             </Paper>
-            <Switch>
-                <Route path="/categories" component={ Categories } />
-                <Route path="/ingredients" component={ ComingSoon } />
-            </Switch>
+            <div className="content">
+                <Switch>
+                    <Route path="/categories" component={ Categories } />
+                    <Route path="/ingredients" component={ Ingredients } />
+                </Switch>
+            </div>
         </Wrapper>
     );
 }
