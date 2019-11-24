@@ -17,12 +17,16 @@ const Container = styled.div`
     flex-direction: column;
     align-items: center;
     background-color: #eaeaea;
+    height: 100vh;
+    padding-top: 56px;
+
+    @media screen and (orientation: landscape) {
+        padding-top: 48px;
+    }
 
     @media screen and (min-width: 600px) {
         padding-top: 64px;
     }
-
-    padding-top: 56px;
 `;
 
 export const Wrapper = styled.div`
