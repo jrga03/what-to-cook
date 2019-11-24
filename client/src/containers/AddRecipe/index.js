@@ -1,8 +1,7 @@
 import React, { useState, useMemo, useRef } from 'react';
-import PropTypes from 'prop-types';
 import { useQuery, useMutation } from '@apollo/react-hooks';
 import { gql } from 'apollo-boost';
-import { withRouter } from 'react-router-dom';
+import { useHistory } from 'react-router-dom';
 import { convertToRaw } from 'draft-js';
 import TextField from '@material-ui/core/TextField';
 import Typography from '@material-ui/core/Typography';
@@ -65,19 +64,11 @@ const SAVE_RECIPE = gql`
 
 /**
  *
- * Add Recipe propTypes
- *
- */
-AddRecipe.propTypes = {
-    history: PropTypes.object
-}
-
-/**
- *
  * Add Recipe Component
  *
  */
-function AddRecipe({ history }) {
+function AddRecipe() {
+    const history = useHistory();
     const [ snackbar, setSnackbar ] = useState({
         open: false,
         message: ''
@@ -98,8 +89,8 @@ function AddRecipe({ history }) {
     const options = useMemo(() => ({
         ingredients: ( get( data, 'ingredients', [])).map(( ingredient ) => ({
             label: startCase( ingredient.name ),
-            value: ingredient.id })
-        ),
+            value: ingredient.id
+        })),
         tags: ( get( data, 'tags', [])).map(( tag ) => ({
             label: startCase( tag.name ),
             value: tag.id
@@ -468,4 +459,4 @@ function AddRecipe({ history }) {
     );
 }
 
-export default withRouter( AddRecipe );
+export default AddRecipe;
