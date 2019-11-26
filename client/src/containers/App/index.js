@@ -18,6 +18,18 @@ const Container = styled.div`
     align-items: center;
     background-color: #eaeaea;
     height: 100vh;
+`;
+
+export const Wrapper = styled.div`
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 2rem;
+    height: 100%;
+`;
+
+const PaddedWrapper = styled.div`
+    height: 100vh;
     padding-top: 56px;
 
     @media screen and (orientation: landscape) {
@@ -26,18 +38,6 @@ const Container = styled.div`
 
     @media screen and (min-width: 600px) {
         padding-top: 64px;
-    }
-`;
-
-export const Wrapper = styled.div`
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 2rem;
-    height: calc( 100vh - 56px );
-
-    @media screen and ( min-width: 600px ) {
-        height: calc( 100vh - 64px );
     }
 `;
 
@@ -52,19 +52,21 @@ function App () {
                 <meta name="description" content="helps decide on what to cook" />
             </Helmet>
             <Header />
-            <Suspense fallback={ <Wrapper>Loading...</Wrapper> }>
-                <Switch>
-                    <Route exact path="/">
-                        <Redirect to="/categories" />
-                    </Route>
-                    <Route exact path={ [ '/categories', '/ingredients' ] } component={ Dashboard } />
-                    <Route exact path="/recipe/add" component={ AddRecipe } />
-                    <Route exact path="/recipes" component={ Recipes } />
-                    <Route exact path="/recipes/*" component={ ComingSoon } />
-                    <Route exact path="/coming-soon" component={ ComingSoon } />
-                    <Route component={ NotFoundPage } />
-                </Switch>
-            </Suspense>
+            <PaddedWrapper>
+                <Suspense fallback={ <Wrapper>Loading...</Wrapper> }>
+                    <Switch>
+                        <Route exact path="/">
+                            <Redirect to="/categories" />
+                        </Route>
+                        <Route exact path={ [ '/categories', '/ingredients' ] } component={ Dashboard } />
+                        <Route exact path="/recipe/add" component={ AddRecipe } />
+                        <Route exact path="/recipes" component={ Recipes } />
+                        <Route exact path="/recipes/*" component={ ComingSoon } />
+                        <Route exact path="/coming-soon" component={ ComingSoon } />
+                        <Route component={ NotFoundPage } />
+                    </Switch>
+                </Suspense>
+            </PaddedWrapper>
         </Container>
     );
 }

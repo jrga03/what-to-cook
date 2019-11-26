@@ -4,6 +4,8 @@ const Wrapper = styled.div`
     width: 100vw;
 
     .content {
+        display: flex;
+        justify-content: center;
         overflow-y: scroll;
         overflow-x: hidden;
         height: calc( 100vh - 104px );
