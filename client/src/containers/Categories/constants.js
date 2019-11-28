@@ -1,3 +1,5 @@
+import burger from 'images/burgers.jpg'; // eslint-disable-line import/no-unresolved
+
 /**
  *
  * Categories constants
@@ -6,39 +8,57 @@
 const CATEGORIES = [
     {
         label: 'Pork',
-        key: 'pork'
+        id: 'pork',
+        image: burger, // TODO: remove
+        imageTitle: 'Burger' // TODO: remove
     },
     {
         label: 'Chicken',
-        key: 'Chicken'
+        id: 'chicken',
+        image: burger, // TODO: remove
+        imageTitle: 'Burger' // TODO: remove
     },
     {
         label: 'Beef',
-        key: 'beef'
+        id: 'beef',
+        image: burger, // TODO: remove
+        imageTitle: 'Burger' // TODO: remove
     },
     {
         label: 'Seafood',
-        key: 'seafood'
+        id: 'seafood',
+        image: burger, // TODO: remove
+        imageTitle: 'Burger' // TODO: remove
     },
     {
         label: 'Pasta',
-        key: 'pasta'
+        id: 'pasta',
+        image: burger, // TODO: remove
+        imageTitle: 'Burger' // TODO: remove
     },
     {
         label: 'Vegetables',
-        key: 'vegetables'
+        id: 'vegetables',
+        image: burger, // TODO: remove
+        imageTitle: 'Burger' // TODO: remove
     },
     {
         label: 'Beverages',
-        key: 'beverages'
+        id: 'beverages',
+        image: burger, // TODO: remove
+        imageTitle: 'Burger' // TODO: remove
     },
     {
         label: 'Desserts',
-        key: 'desserts'
+        id: 'desserts',
+        image: burger, // TODO: remove
+        imageTitle: 'Burger' // TODO: remove
     },
     {
         label: 'Others',
-        key: 'others'
+        id: 'others',
+        image: burger, // TODO: remove
+        imageTitle: 'Burger' // TODO: remove
     }
 ];
 

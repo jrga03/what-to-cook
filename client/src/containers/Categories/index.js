@@ -1,11 +1,8 @@
-import React, { useCallback } from 'react';
+import React from 'react';
 import { useHistory } from 'react-router-dom';
 import Fade from '@material-ui/core/Fade';
-import GridList from '@material-ui/core/GridList';
-import GridListTile from '@material-ui/core/GridListTile';
 
-import ItemCard from 'components/ItemCard'; // eslint-disable-line import/no-unresolved
-import burger from 'images/burgers.jpg'; // eslint-disable-line import/no-unresolved
+import ItemCardList from '../../components/ItemCardList';
 
 import Wrapper from './styles';
 import CATEGORIES from './constants';
@@ -15,25 +12,18 @@ import CATEGORIES from './constants';
  */
 function Categories() {
     const history = useHistory();
-    const navigate = ( key ) => useCallback(() => { // eslint-disable-line react-hooks/rules-of-hooks
-        history.push( `/recipes/${key}` );
-    }, [key]);
+    const navigate = ( key ) => history.push( `/categories/${key}` );
 
     return (
         <Wrapper>
             <Fade in>
-                <GridList cols={ 2 } cellHeight="auto" spacing={ 4 }>
-                    { CATEGORIES.map(({ key, label }) => (
-                        <GridListTile key={ key }>
-                            <ItemCard
-                                label={ label }
-                                image={ burger } // TODO:
-                                imageTitle="Burger" // TODO:
-                                onClick={ navigate( key ) }
-                            />
-                        </GridListTile>
-                    )) }
-                </GridList>
+                <ItemCardList
+                    cols={ 2 }
+                    cellHeight="auto"
+                    spacing={ 4 }
+                    data={ CATEGORIES }
+                    onClickItem={ navigate }
+                />
             </Fade>
         </Wrapper>
     );
