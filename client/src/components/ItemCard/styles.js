@@ -1,6 +1,5 @@
 import styled from 'styled-components';
 import Card from '@material-ui/core/Card';
-import CardMedia from '@material-ui/core/CardMedia';
 import CheckCircle from '@material-ui/icons/CheckCircle';
 
 export const StyledCard = styled( Card )`
@@ -8,15 +7,26 @@ export const StyledCard = styled( Card )`
     position: relative;
 
     .MuiCardContent-root {
-        padding: 8px 16px;
+        display: flex;
+        flex-direction: column;
+        padding: calc( 4% + 4px );
+        height: ${({ width }) => width - 5}vw;
+        width: ${({ width }) => width}vw;
+    }
+
+    .MuiTypography-root {
+        flex: 0;
+        line-height: unset;
     }
 }
 `;
 
-export const StyledCardMedia = styled( CardMedia )`
-&& {
-    height: calc( 50vw - 60px );
-}
+export const CardMediaWrapper = styled.div`
+    flex: 1;
+
+    .MuiCardMedia-root {
+        height: 100%;
+    }
 `;
 
 export const StyledCheckCircle = styled( CheckCircle )`
