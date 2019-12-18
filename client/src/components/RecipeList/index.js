@@ -6,6 +6,7 @@ import GridListTile from '@material-ui/core/GridListTile';
 import GridListTileBar from '@material-ui/core/GridListTileBar';
 import IconButton from '@material-ui/core/IconButton';
 import StarBorderIcon from '@material-ui/icons/StarBorder';
+
 import burger from '../../images/burgers.jpg';
 
 // import { Wrapper, ScrollWrapper } from './styles';
@@ -88,7 +89,7 @@ class RecipeList extends PureComponent {
                 <GridList className={ classes.gridList } cols={ columns }>
                     {
                         recipes.map(( recipe ) => (
-                            <GridListTile key={ recipe.key }>
+                            <GridListTile key={ recipe.id }>
                                 <img src={ burger } className={ classes.image } alt={ recipe.name } />
                                 <GridListTileBar
                                     title={ recipe.name }

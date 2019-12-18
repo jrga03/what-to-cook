@@ -416,7 +416,7 @@ function AddRecipe() {
 
             <TextFieldWrapper>
                 <Typography variant="h6">
-                    Instructions
+                    Directions
                 </Typography>
             </TextFieldWrapper>
 
