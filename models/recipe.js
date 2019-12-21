@@ -7,8 +7,11 @@ const RecipeSchema = new Schema({
     description: { type: String },
     photo: { type: String },
     ingredients: [{
-        type: Schema.Types.ObjectId,
-        ref: 'ingredient'
+        quantity: String,
+        ingredient: {
+            type: Schema.Types.ObjectId,
+            ref: 'ingredient'
+        }
     }],
     tags: [{
         type: Schema.Types.ObjectId,
@@ -106,7 +109,8 @@ RecipeSchema.statics.addRecipe = async ({ name, description = '', photo, ingredi
 
         if ( ingredients.length > 0 ) {
             const Ingredient = mongoose.model( 'ingredient' );
-            promises.push( Ingredient.updateMany({ _id: { $in: ingredients } }, { $addToSet: { recipes: recipe._id } }));
+            const ingredientIds = ingredients.map(({ ingredient }) => ingredient );
+            promises.push( Ingredient.updateMany({ _id: { $in: ingredientIds } }, { $addToSet: { recipes: recipe._id } }));
         }
 
         const [updatedRecipe] = await Promise.all( promises );
@@ -142,7 +146,8 @@ RecipeSchema.statics.editRecipe = async ({ id, ...args }) => {
 
         if ( args.ingredients && args.ingredients.length > 0 ) {
             const Ingredient = mongoose.model( 'ingredient' );
-            promises.push( Ingredient.updateMany({ _id: { $in: args.ingredients } }, { $addToSet: { recipes: id } }));
+            const ingredientIds = args.ingredients.map(({ ingredient }) => ingredient );
+            promises.push( Ingredient.updateMany({ _id: { $in: ingredientIds } }, { $addToSet: { recipes: id } }));
         }
 
         const [updatedRecipe] = await Promise.all( promises );

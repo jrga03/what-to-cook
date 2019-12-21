@@ -5,7 +5,8 @@ const {
     GraphQLList,
     GraphQLID,
     GraphQLNonNull,
-    GraphQLString
+    GraphQLString,
+    GraphQLInputObjectType
 } = require( 'graphql' );
 const Ingredient = model( 'ingredient' );
 const Recipe = model( 'recipe' );
@@ -16,16 +17,17 @@ const IngredientType = new GraphQLObjectType({
     fields: () => ({
         id: { type: GraphQLID },
         name: { type: GraphQLString },
-        recipes: {
-            type: GraphQLList( RecipeType ),
-            description: '',
-            async resolve( parentValue ) {
-                const recipes = await Ingredient.findRecipes( parentValue.recipes );
-                return recipes;
-            }
-        }
+        recipes: { type: GraphQLList( RecipeType ) }
     })
 });
+
+const RecipeIngredientType = new GraphQLObjectType({
+    name: 'RecipeIngredient',
+    fields: () => ({
+        quantity: { type: GraphQLString },
+        ingredient: { type: IngredientType }
+    })
+})
 
 const RecipeType = new GraphQLObjectType({
     name: 'RecipeType',
@@ -34,23 +36,9 @@ const RecipeType = new GraphQLObjectType({
         name: { type: GraphQLString },
         description: { type: GraphQLString },
         photo: { type: GraphQLString },
-        ingredients: {
-            type: GraphQLList( IngredientType ),
-            description: '',
-            async resolve( parentValue ) {
-                const ingredients = await Recipe.findIngredients( parentValue.ingredients );
-                return ingredients;
-            }
-        },
+        ingredients: { type: GraphQLList( RecipeIngredientType ) },
         instructions: { type: GraphQLString },
-        tags: {
-            type: GraphQLList( TagType ),
-            description: '',
-            async resolve( parentValue ) {
-                const tags = await Recipe.findTags( parentValue.tags );
-                return tags;
-            }
-        }
+        tags: { type: GraphQLList( TagType ) }
     })
 });
 
@@ -59,16 +47,17 @@ const TagType = new GraphQLObjectType({
     fields: () => ({
         id: { type: GraphQLID },
         name: { type: GraphQLString },
-        recipes: {
-            type: GraphQLList( RecipeType ),
-            description: '',
-            async resolve( parentValue ) {
-                const recipes = await Tag.findRecipes( parentValue.recipes );
-                return recipes;
-            }
-        }
+        recipes: { type: GraphQLList( RecipeType ) }
     })
 });
+
+const RecipeIngredientInput = new GraphQLInputObjectType({
+    name: 'RecipeIngredientInput',
+    fields: () => ({
+        quantity: { type: GraphQLString },
+        ingredient: { type: GraphQLID }
+    })
+})
 
 const query = new GraphQLObjectType({
     name: 'RootQueryType',
@@ -76,14 +65,34 @@ const query = new GraphQLObjectType({
         recipes: {
             type: GraphQLList( RecipeType ),
             args: {
-                tags: { type: GraphQLList( GraphQLNonNull( GraphQLString)) }
+                tags: { type: GraphQLList( GraphQLNonNull( GraphQLString ) ) }
             },
             async resolve( parentValue, { tags = []}) {
                 if ( tags.length > 0 ) {
                     const recipes = await Recipe.findRecipeByTags( tags ); // TODO: fix method
                     return recipes;
                 }
-                return Recipe.find({});
+
+                const recipes = await new Promise( function( resolve, reject ) {
+                    try {
+                        Recipe
+                            .find({})
+                            .populate( 'tags' )
+                            .exec( function( error, _recipes ) {
+                                Ingredient.populate(
+                                    _recipes,
+                                    { path: 'ingredients.ingredient' },
+                                    function( error, recipesWithPopulatedIngredients ) {
+                                        resolve( recipesWithPopulatedIngredients );
+                                    }
+                                )
+                            });
+                    } catch ( error ) {
+                        reject( error );
+                    }
+                })
+
+                return recipes;
             }
         },
         recipe: {
@@ -99,7 +108,7 @@ const query = new GraphQLObjectType({
         ingredients: {
             type: GraphQLList( IngredientType ),
             resolve() {
-                return Ingredient.find({});
+                return Ingredient.find({}).populate( 'recipes' );
             }
         },
         ingredient: {
@@ -114,7 +123,7 @@ const query = new GraphQLObjectType({
         tags: {
             type: GraphQLList( TagType ),
             resolve() {
-                return Tag.find({});
+                return Tag.find({}).populate( 'recipes' );
             }
         }
     })
@@ -129,7 +138,7 @@ const mutation = new GraphQLObjectType({
                 name: { type: GraphQLNonNull( GraphQLString ) },
                 description: { type: GraphQLString },
                 photo: { type: GraphQLNonNull( GraphQLString ) },
-                ingredients: { type: GraphQLList( GraphQLID ) },
+                ingredients: { type: GraphQLList( RecipeIngredientInput ) },
                 instructions: { type: GraphQLNonNull( GraphQLString ) },
                 tags: { type: GraphQLList( GraphQLID ) },
                 newTags: { type: GraphQLList( GraphQLString ) }
@@ -145,7 +154,7 @@ const mutation = new GraphQLObjectType({
                 name: { type: GraphQLString },
                 description: { type: GraphQLString },
                 photo: { type: GraphQLNonNull( GraphQLString ) },
-                ingredients: { type: GraphQLList( GraphQLID ) },
+                ingredients: { type: GraphQLList( RecipeIngredientInput ) },
                 instructions: { type: GraphQLNonNull( GraphQLString ) },
                 tags: { type: GraphQLList( GraphQLID ) },
                 newTags: { type: GraphQLList( GraphQLString ) }
