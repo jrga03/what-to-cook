@@ -10,6 +10,13 @@ const GET_RECIPES = gql`
             name
             description
             photo
+            ingredients {
+                quantity
+                ingredient {
+                    id
+                    name
+                }
+            }
         }
     }
 `;

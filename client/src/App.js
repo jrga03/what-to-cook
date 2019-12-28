@@ -1,7 +1,7 @@
 /* eslint-disable import/no-unresolved */
 import React, { lazy, Suspense } from 'react';
 import { BrowserRouter } from 'react-router-dom';
-import ApolloClient from 'apollo-boost';
+import ApolloClient, { gql } from 'apollo-boost';
 import { ApolloProvider } from 'react-apollo';
 import { ApolloProvider as ApolloHooksProvider } from '@apollo/react-hooks';
 import axios from 'axios';
@@ -12,7 +12,18 @@ import 'draft-js-alignment-plugin/lib/plugin.css';
 axios.defaults.headers.common[ 'X-Requested-With' ] = 'XMLHttpRequest';
 
 const client = new ApolloClient({
-    uri: "/graphql"
+    uri: "/graphql",
+    typeDefs: gql`
+        input RecipeIngredientInput {
+            quantity: String!
+            ingredient: ID!
+        }
+
+        input NewIngredientInput {
+            quantity: String!
+            ingredient: String!
+        }
+    `
 });
 
 const Loading = (

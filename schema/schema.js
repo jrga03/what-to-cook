@@ -59,6 +59,14 @@ const RecipeIngredientInput = new GraphQLInputObjectType({
     })
 })
 
+const NewIngredientInput = new GraphQLInputObjectType({
+    name: 'NewIngredientInput',
+    fields: () => ({
+        quantity: { type: GraphQLString },
+        ingredient: { type: GraphQLString }
+    })
+})
+
 const query = new GraphQLObjectType({
     name: 'RootQueryType',
     fields: () => ({
@@ -139,6 +147,7 @@ const mutation = new GraphQLObjectType({
                 description: { type: GraphQLString },
                 photo: { type: GraphQLNonNull( GraphQLString ) },
                 ingredients: { type: GraphQLList( RecipeIngredientInput ) },
+                newIngredients: { type: GraphQLList( NewIngredientInput ) },
                 instructions: { type: GraphQLNonNull( GraphQLString ) },
                 tags: { type: GraphQLList( GraphQLID ) },
                 newTags: { type: GraphQLList( GraphQLString ) }
@@ -155,6 +164,7 @@ const mutation = new GraphQLObjectType({
                 description: { type: GraphQLString },
                 photo: { type: GraphQLNonNull( GraphQLString ) },
                 ingredients: { type: GraphQLList( RecipeIngredientInput ) },
+                newIngredients: { type: GraphQLList( NewIngredientInput ) },
                 instructions: { type: GraphQLNonNull( GraphQLString ) },
                 tags: { type: GraphQLList( GraphQLID ) },
                 newTags: { type: GraphQLList( GraphQLString ) }
@@ -247,9 +257,9 @@ const mutation = new GraphQLObjectType({
             },
             resolve( parentValue, { name, id }) {
                 if ( id ) {
-                    return Tag.remove({ _id: id });
+                    return Tag.deleteOne({ _id: id });
                 }
-                return Tag.remove({ name: name.toLowerCase() });
+                return Tag.deleteOne({ name: name.toLowerCase() });
             }
         }
     })

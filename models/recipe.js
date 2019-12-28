@@ -88,34 +88,77 @@ RecipeSchema.statics.addIngredientToRecipe = async ( ingredientIds, recipeId ) =
     }
 }
 
-RecipeSchema.statics.addRecipe = async ({ name, description = '', photo, ingredients = [], instructions, tags = [], newTags = []}) => {
+/**
+ * Saves new ingredients and tags
+ * @param {object} param
+ * @param {object[]} param.ingredients
+ * @param {string[]} param.tags
+ * @returns {object}
+ */
+async function saveNewIngredientsAndTags({ ingredients, tags }) {
+    const Ingredient = mongoose.model( 'ingredient' );
+    const Tag = mongoose.model( 'tag' );
+    const newIngredientsWithRecipe = ingredients.map(({ ingredient }) => ({ name: ingredient, recipes: [] }));
+    const newTagsWithRecipe = tags.map(( tag ) => ({ name: tag, recipes: [] }));
+
+    const [ savedNewIngredients, savedNewTags ] = await Promise.all([
+        ingredients.length > 0 && Ingredient.insertMany( newIngredientsWithRecipe ),
+        tags.length > 0 && Tag.insertMany( newTagsWithRecipe )
+    ]);
+
+    return {
+        ingredients: savedNewIngredients || [],
+        tags: savedNewTags || []
+    };
+}
+
+RecipeSchema.statics.addRecipe = async ({ name, description = '', photo, ingredients = [], newIngredients = [], instructions, tags = [], newTags = []}) => {
     const Recipe = mongoose.model( 'recipe' );
 
     try {
-        const recipe = new Recipe({ name, description, photo, ingredients, instructions, tags });
+        const saved = await saveNewIngredientsAndTags({
+            ingredients: newIngredients,
+            tags: newTags
+        });
 
-        const promises = [recipe.save()];
+        const mergedIngredients = ingredients.concat(
+            newIngredients.map(({ quantity, ingredient }) => ({
+                quantity,
+                ingredient: saved.ingredients.find(({ name }) => name === ingredient )._id
+            }) )
+        );
 
-        if ( tags.length > 0 ) {
-            const Tag = mongoose.model( 'tag' );
-            promises.push( Tag.updateMany({ _id: { $in: tags } }, { $addToSet: { recipes: recipe._id } }));
-        }
+        const mergedTags = tags.concat(
+            saved.tags.map(( id ) => id )
+        );
 
-        if ( newTags.length > 0 ) {
-            const Tag = mongoose.model( 'tag' );
-            const newTagsWithRecipe = newTags.map(( tag ) => ({ name: tag, recipes: [recipe._id] }))
-            promises.push( Tag.insertMany( newTagsWithRecipe ));
-        }
+        const recipe = new Recipe({
+            name,
+            description,
+            photo,
+            ingredients: mergedIngredients,
+            instructions,
+            tags: mergedTags
+        });
 
-        if ( ingredients.length > 0 ) {
+        function saveIngredients() {
             const Ingredient = mongoose.model( 'ingredient' );
-            const ingredientIds = ingredients.map(({ ingredient }) => ingredient );
-            promises.push( Ingredient.updateMany({ _id: { $in: ingredientIds } }, { $addToSet: { recipes: recipe._id } }));
+            const ingredientIds = mergedIngredients.map(({ ingredient }) => ingredient );
+            return Ingredient.updateMany({ _id: { $in: ingredientIds } }, { $addToSet: { recipes: recipe._id } });
         }
 
-        const [updatedRecipe] = await Promise.all( promises );
+        function saveTags() {
+            const Tag = mongoose.model( 'tag' );
+            return Tag.updateMany({ _id: { $in: mergedTags } }, { $addToSet: { recipes: recipe._id } });
+        }
 
-        return updatedRecipe;
+        const [newRecipe] = await Promise.all([
+            recipe.save(),
+            mergedIngredients.length > 0 && saveIngredients(),
+            mergedTags.length > 0 && saveTags()
+        ]);
+
+        return newRecipe;
     } catch ( error ) {
         throw error;
     }
@@ -125,32 +168,49 @@ RecipeSchema.statics.editRecipe = async ({ id, ...args }) => {
     const Recipe = mongoose.model( 'recipe' );
 
     try {
-        const recipe = await Recipe.findById( id );
+        const { ingredients = [], newIngredients = [], tags = [], newTags = [], ...rest } = args;
 
-        Object.keys( args ).forEach(( key ) => {
-            recipe[ key ] = args[ key ];
+        const saved = await saveNewIngredientsAndTags({
+            ingredients: newIngredients,
+            tags: newTags
         });
 
-        const promises = [recipe.save()];
+        const mergedIngredients = ingredients.concat(
+            newIngredients.map(({ quantity, ingredient }) => ({
+                quantity,
+                ingredient: saved.ingredients.find(({ name }) => name === ingredient )._id
+            }) )
+        );
 
-        if ( args.tags && args.tags.length > 0 ) {
-            const Tag = mongoose.model( 'tag' );
-            promises.push( Tag.updateMany({ _id: { $in: args.tags } }, { $addToSet: { recipes: id } }));
-        }
+        const mergedTags = tags.concat(
+            saved.tags.map(( id ) => id )
+        );
 
-        if ( args.newTags.length > 0 ) {
-            const Tag = mongoose.model( 'tag' );
-            const newTagsWithRecipe = args.newTags.map(( tag ) => ({ name: tag, recipes: [id] }))
-            promises.push( Tag.insertMany( newTagsWithRecipe ));
-        }
+        const recipe = await Recipe.findById( id );
 
-        if ( args.ingredients && args.ingredients.length > 0 ) {
+        Object.keys( rest ).forEach(( key ) => {
+            recipe[ key ] = rest[ key ];
+        });
+
+        recipe.ingredients = mergedIngredients;
+        recipe.tags = mergedTags;
+
+        function saveIngredients() {
             const Ingredient = mongoose.model( 'ingredient' );
-            const ingredientIds = args.ingredients.map(({ ingredient }) => ingredient );
-            promises.push( Ingredient.updateMany({ _id: { $in: ingredientIds } }, { $addToSet: { recipes: id } }));
+            const ingredientIds = mergedIngredients.map(({ ingredient }) => ingredient );
+            return Ingredient.updateMany({ _id: { $in: ingredientIds } }, { $addToSet: { recipes: id } });
         }
 
-        const [updatedRecipe] = await Promise.all( promises );
+        function saveTags() {
+            const Tag = mongoose.model( 'tag' );
+            return Tag.updateMany({ _id: { $in: mergedTags } }, { $addToSet: { recipes: id } });
+        }
+
+        const [updatedRecipe] = await Promise.all([
+            recipe.save(),
+            mergedIngredients.length > 0 && saveIngredients(),
+            mergedTags.length > 0 && saveTags()
+        ]);
 
         return updatedRecipe;
     } catch ( error ) {

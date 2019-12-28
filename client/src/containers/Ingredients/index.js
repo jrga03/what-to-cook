@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useEffect } from 'react';
 // import { useHistory } from 'react-router-dom';
 import Fade from '@material-ui/core/Fade';
 import CircularProgress from '@material-ui/core/CircularProgress';
@@ -28,8 +28,8 @@ function Ingredients() {
     const [ ingredients, setIngredients ] = useState([]);
     const { data, loading } = useQuery( GET_INGREDIENTS );
 
-    useMemo(() => {
-        if ( data ) {
+    useEffect(() => {
+        if ( !loading && data ) {
             const newIngredients = data.ingredients.map(({ id, name }) => ({
                 id,
                 label: startCase( name ),
@@ -40,7 +40,7 @@ function Ingredients() {
 
             setIngredients( newIngredients );
         }
-    }, [data]);
+    }, [loading]); // eslint-disable-line react-hooks/exhaustive-deps
 
     const onClickItem = ( id, index ) => {
         const ingredientsCopy = Array.from( ingredients );

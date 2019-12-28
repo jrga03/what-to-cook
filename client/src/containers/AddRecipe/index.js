@@ -1,4 +1,4 @@
-import React, { useState, useMemo, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { useQuery, useMutation } from '@apollo/react-hooks';
 import { gql } from 'apollo-boost';
 import { useHistory } from 'react-router-dom';
@@ -14,11 +14,9 @@ import Check from '@material-ui/icons/Check';
 import startCase from 'lodash/startCase';
 import get from 'lodash/get';
 
-/* eslint-disable import/no-unresolved */
-import Multiselect from 'components/Multiselect';
-import CreatableMultiselect from 'components/Multiselect/Creatable';
-import { upload, compressImage } from 'utils/fileHelper';
-/* eslint-enable import/no-unresolved */
+import CreatableMultiselect from '../../components/Multiselect/Creatable';
+import AddIngredients from '../../components/AddIngredients';
+import { upload, compressImage } from '../../utils/fileHelper';
 
 import EditorWithPlugins from './EditorWithPlugins';
 import {
@@ -44,7 +42,8 @@ const SAVE_RECIPE = gql`
         $name: String!,
         $description: String,
         $photo: String!,
-        $ingredients: [ID],
+        $ingredients: [RecipeIngredientInput],
+        $newIngredients: [NewIngredientInput],
         $instructions: String!,
         $tags: [ID],
         $newTags: [String]) {
@@ -53,6 +52,7 @@ const SAVE_RECIPE = gql`
                 description: $description,
                 photo: $photo,
                 ingredients: $ingredients,
+                newIngredients: $newIngredients,
                 instructions: $instructions,
                 tags: $tags,
                 newTags: $newTags
@@ -77,25 +77,31 @@ function AddRecipe() {
     const [ nameError, setNameError ] = useState( false );
     const [ photoUrlError, setPhotoUrlError ] = useState( false );
     const [ ingredients, setIngredients ] = useState([]);
+    const [ ingredientOptions, setIngredientOptions ] = useState([]);
     const [ tags, setTags ] = useState([]);
+    const [ tagOptions, setTagOptions ] = useState([]);
     const [ photoUrl, setPhotoUrl ] = useState( null );
     const [ photoName, setPhotoName ] = useState( '' );
     const [ uploading, setUploading ] = useState( false );
     const [ editorUploading, setEditorUploading ] = useState( false );
+    const [ saving, setSaving ] = useState( false );
 
     const { data, loading } = useQuery( GET_OPTIONS );
-    const [ saveRecipe, { loading: saving }] = useMutation( SAVE_RECIPE );
+    const [saveRecipe] = useMutation( SAVE_RECIPE );
 
-    const options = useMemo(() => ({
-        ingredients: ( get( data, 'ingredients', [])).map(( ingredient ) => ({
-            label: startCase( ingredient.name ),
-            value: ingredient.id
-        })),
-        tags: ( get( data, 'tags', [])).map(( tag ) => ({
-            label: startCase( tag.name ),
-            value: tag.id
-        }))
-    }), [data])
+    useEffect(() => {
+        if ( !loading && data ) {
+            setIngredientOptions( data.ingredients.map(( ingredient ) => ({
+                label: startCase( ingredient.name ),
+                value: ingredient.id
+            })))
+
+            setTagOptions( data.tags.map(( tag ) => ({
+                label: startCase( tag.name ),
+                value: tag.id
+            })))
+        }
+    }, [loading]); // eslint-disable-line react-hooks/exhaustive-deps
 
     const recipeNameRef = useRef( null );
     const photoUrlRef = useRef( null );
@@ -134,11 +140,31 @@ function AddRecipe() {
     }
 
     /**
-     * Ingredients onChange handler
-     * @param {Array} _ingredients - Selected ingredients
+     * Handler for adding ingredient option
+     * @param {object} newIngredient
      */
-    function handleChangeIngredients( _ingredients ) {
-        setIngredients( _ingredients );
+    function handleAddIngredientOption( newIngredient ) {
+        const newIngredientOptions = Array.from( ingredientOptions );
+        newIngredientOptions.unshift( newIngredient );
+        setIngredientOptions( newIngredientOptions )
+    }
+
+    /**
+     * Handler for adding ingredient
+     * @param {object} ingredient
+     */
+    function handleAddIngredient( ingredient ) {
+        setIngredients( ingredients.concat( ingredient ));
+    }
+
+    /**
+     * Handler for removing ingredient
+     * @param {number} index
+     */
+    function handleRemoveIngredient( index ) {
+        const newIngredients = Array.from( ingredients );
+        newIngredients.splice( index, 1 );
+        setIngredients( newIngredients );
     }
 
     /**
@@ -210,13 +236,26 @@ function AddRecipe() {
         }
 
         if ( checkForm()) {
-            const _tags = tags.reduce(( tagsObj, tag ) => {
-                if ( tag.__isNew__ ) {
-                    tagsObj.new.push( tag.value );
-                } else {
-                    tagsObj.existing.push( tag.value )
-                }
+            setSaving( true );
+
+            const tagsObject = tags.reduce(( tagsObj, tag ) => {
+                const array = tagsObj[ tag.__isNew__ ? 'new' : 'existing' ];
+                array.push( tag.value );
+
                 return tagsObj;
+            }, {
+                new: [],
+                existing: []
+            });
+
+            const ingredientsObject = ingredients.reduce(( ingredientsObj, { quantity, ingredient, __isNew__ }) => {
+                const array = ingredientsObj[ __isNew__ ? 'new' : 'existing' ];
+                array.push({
+                    quantity,
+                    ingredient
+                });
+
+                return ingredientsObj;
             }, {
                 new: [],
                 existing: []
@@ -226,10 +265,11 @@ function AddRecipe() {
                 name,
                 description: descriptionRef.current.value,
                 photo: photoUrl,
-                ingredients: ingredients.map(( ingredient ) => ingredient.value ),
+                ingredients: ingredientsObject.existing,
+                newIngredients: ingredientsObject.new,
                 instructions: JSON.stringify( convertToRaw( editorRef.current.state.editorState.getCurrentContent())),
-                tags: _tags.existing,
-                newTags: _tags.new
+                tags: tagsObject.existing,
+                newTags: tagsObject.new
             };
 
             setSnackbar({
@@ -239,7 +279,7 @@ function AddRecipe() {
 
             try {
                 await saveRecipe({ variables: payload });
-                history.push( '/recipes' )
+                history.push( '/recipes' );
             } catch ( error ) {
                 setSnackbar({
                     open: true,
@@ -247,6 +287,7 @@ function AddRecipe() {
                     message: 'Error saving',
                     type: 'error'
                 });
+                setSaving( false );
             }
         }
     }
@@ -345,6 +386,10 @@ function AddRecipe() {
                     error={ photoUrlError }
                     helperText={ photoUrlError && 'Required' }
                     onClick={ selectFile }
+                    onKeyDown={ ( event ) => {
+                        event.preventDefault();
+                        [ 'Enter', ' ' ].includes( event.key ) && selectFile()
+                    } }
                     disabled={ saving || uploading }
                     InputProps={{
                         endAdornment: (
@@ -379,20 +424,14 @@ function AddRecipe() {
                     ref={ fileInputRef }
                 />
 
-                <Multiselect
-                    id="recipe-ingredients-select"
-                    label="Ingredients"
-                    placeholder="Select ingredients..."
-                    className="multiselect"
-                    value={ ingredients }
-                    options={ options.ingredients }
-                    onChange={ handleChangeIngredients }
-                    noOptionsMessage={ ({ inputValue }) => `Cannot find "${inputValue}"` }
-                    styles={{
-                        valueContainer: ( style ) => ({ ...style, paddingLeft: 0 })
-                    }}
+                <AddIngredients
                     isLoading={ loading }
                     isDisabled={ saving }
+                    ingredients={ ingredientOptions }
+                    selectedIngredients={ ingredients }
+                    onAddIngredientOption={ handleAddIngredientOption }
+                    onAddIngredient={ handleAddIngredient }
+                    onRemoveIngredient={ handleRemoveIngredient }
                 />
 
                 <CreatableMultiselect
@@ -401,7 +440,7 @@ function AddRecipe() {
                     placeholder="Add tags"
                     className="multiselect"
                     value={ tags }
-                    options={ options.tags }
+                    options={ tagOptions }
                     onChange={ handleChangeTags }
                     formatCreateLabel={ ( inputValue ) => `Add tag "${inputValue}"?` }
                     styles={{
