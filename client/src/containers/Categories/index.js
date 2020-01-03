@@ -3,16 +3,16 @@ import { useHistory } from 'react-router-dom';
 import Fade from '@material-ui/core/Fade';
 
 import ItemCardList from '../../components/ItemCardList';
+import { CATEGORIES } from '../../constants';
 
 import Wrapper from './styles';
-import CATEGORIES from './constants';
 
 /**
  * Categories
  */
 function Categories() {
     const history = useHistory();
-    const navigate = ( key ) => history.push( `/categories/${key}` );
+    const navigate = ( key ) => history.push( `/recipes?category=${key}` );
 
     return (
         <Wrapper>

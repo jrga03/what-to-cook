@@ -1,16 +1,17 @@
-/* eslint-disable import/no-unresolved */
 import React, { lazy, Suspense } from 'react';
 import { Helmet } from 'react-helmet';
 import { Switch, Route, Redirect } from 'react-router';
 import styled from 'styled-components';
 
-import NotFoundPage from 'containers/NotFoundPage';
-import ComingSoon from 'containers/ComingSoon';
-import Header from 'containers/Header';
-import Recipes from 'containers/Recipes';
+import Loader from '../../components/Loader';
 
-const Dashboard = lazy(() => import( 'containers/Dashboard' ));
-const AddRecipe = lazy(() => import( 'containers/AddRecipe' ));
+import NotFoundPage from "../NotFoundPage";
+import ComingSoon from "../ComingSoon";
+import Header from "../Header";
+
+const Dashboard = lazy(() => import( "../Dashboard" ));
+const AddRecipe = lazy(() => import( "../AddRecipe" ));
+const Recipes = lazy(() => import( "../Recipes" ));
 
 const Container = styled.div`
     display: flex;
@@ -53,7 +54,13 @@ function App () {
             </Helmet>
             <Header />
             <PaddedWrapper>
-                <Suspense fallback={ <Wrapper>Loading...</Wrapper> }>
+                <Suspense
+                    fallback={
+                        <Wrapper>
+                            <Loader />
+                        </Wrapper>
+                    }
+                >
                     <Switch>
                         <Route exact path="/">
                             <Redirect to="/categories" />
@@ -61,7 +68,6 @@ function App () {
                         <Route exact path={ [ '/categories', '/ingredients' ] } component={ Dashboard } />
                         <Route exact path="/recipe/add" component={ AddRecipe } />
                         <Route exact path="/recipes" component={ Recipes } />
-                        <Route exact path="/recipes/*" component={ ComingSoon } />
                         <Route exact path="/categories/*" component={ ComingSoon } />
                         <Route exact path="/coming-soon" component={ ComingSoon } />
                         <Route component={ NotFoundPage } />

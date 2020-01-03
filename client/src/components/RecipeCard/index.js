@@ -1,44 +1,53 @@
 import React from 'react';
 import PropTypes from 'prop-types';
-import { withStyles } from '@material-ui/core/styles';
-import ButtonBase from '@material-ui/core/ButtonBase';
-import Card from '@material-ui/core/Card';
-import CardHeader from '@material-ui/core/CardHeader';
-import CardContent from '@material-ui/core/CardContent';
-import FastFoodIcon from '@material-ui/icons/FastfoodTwoTone';
+import { Link } from 'react-router-dom';
+import Typography from '@material-ui/core/Typography';
 
-const styles = ( theme ) => ({
-    root: {
-        padding: theme.spacing.unit
-    },
-    button: {},
-    card: {
-        width: 150,
-        maxWidth: '50vw'
-    },
-    focusVisible: {}
-});
+import {
+    StyledCardWrapper,
+    StyledCard,
+    StyledCardMedia,
+    StyledCardContent
+} from './styles';
 
-const RecipeCard = ( props ) => (
-    <div className={ props.classes.root }>
-        <ButtonBase
-            focusRipple
-            className={ props.classes.button }
-            focusVisibleClassName={ props.classes.focusVisible }
-        >
-            <Card raised className={ props.classes.card }>
-                <CardHeader title={ props.name } />
-                <CardContent>
-                    <FastFoodIcon />
-                </CardContent>
-            </Card>
-        </ButtonBase>
-    </div>
-)
+function RecipeCard({ style, name, photo, description }) {
+    return (
+        <StyledCardWrapper style={ style }>
+            <Link
+                to="/recipes" // TODO:
+                className="link"
+            >
+                <StyledCard>
+                    <StyledCardMedia
+                        image={ photo }
+                        title={ name }
+                    />
+                    <StyledCardContent>
+                        <Typography className="recipe-name" component="h6" variant="h6" gutterBottom>
+                            { name }
+                        </Typography>
 
-RecipeCard.propTypes = {
-    classes: PropTypes.object.isRequired,
-    name: PropTypes.string.isRequired
+                        <Typography component="span" variant="caption" color="textSecondary">
+                            { description }
+                        </Typography>
+
+                    </StyledCardContent>
+                </StyledCard>
+            </Link>
+        </StyledCardWrapper>
+    );
 }
 
-export default withStyles( styles )( RecipeCard );
+RecipeCard.propTypes = {
+    style: PropTypes.object,
+    name: PropTypes.string.isRequired,
+    photo: PropTypes.string.isRequired,
+    description: PropTypes.string
+}
+
+RecipeCard.defaultProps = {
+    style: {},
+    description: ''
+}
+
+export default RecipeCard;

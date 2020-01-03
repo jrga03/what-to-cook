@@ -9,6 +9,8 @@ import 'draft-js-image-plugin/lib/plugin.css';
 import 'draft-js-focus-plugin/lib/plugin.css';
 import 'draft-js-alignment-plugin/lib/plugin.css';
 
+import Loader from './components/Loader';
+
 axios.defaults.headers.common[ 'X-Requested-With' ] = 'XMLHttpRequest';
 
 const client = new ApolloClient({
@@ -36,7 +38,7 @@ const Loading = (
             justifyContent: 'center'
         }}
     >
-        Loading...
+        <Loader />
     </div>
 );
 const App = lazy(() => import( 'containers/App' ));

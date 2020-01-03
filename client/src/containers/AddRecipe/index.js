@@ -17,6 +17,7 @@ import get from 'lodash/get';
 import CreatableMultiselect from '../../components/Multiselect/Creatable';
 import AddIngredients from '../../components/AddIngredients';
 import { upload, compressImage } from '../../utils/fileHelper';
+import { useHeaderHeight } from '../../utils/hooks';
 
 import EditorWithPlugins from './EditorWithPlugins';
 import {
@@ -69,6 +70,8 @@ const SAVE_RECIPE = gql`
  */
 function AddRecipe() {
     const history = useHistory();
+    const headerHeight = useHeaderHeight();
+
     const [ snackbar, setSnackbar ] = useState({
         open: false,
         message: ''
@@ -131,7 +134,6 @@ function AddRecipe() {
      */
     function scrollToRef( ref ) {
         const { top, height } = ref.current.getBoundingClientRect();
-        const headerHeight = window.innerWidth < 600 ? 56 : 64;
 
         window.scrollTo({
             top: window.scrollY + top - height - headerHeight,

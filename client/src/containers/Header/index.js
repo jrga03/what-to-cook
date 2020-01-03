@@ -1,6 +1,6 @@
 import React, { useState, useRef } from 'react';
 import PropTypes from 'prop-types';
-import { NavLink, withRouter } from 'react-router-dom';
+import { NavLink, useLocation, useHistory } from 'react-router-dom';
 import SwipeableDrawer from '@material-ui/core/SwipeableDrawer';
 import Popper from '@material-ui/core/Popper';
 import Grow from '@material-ui/core/Grow';
@@ -17,9 +17,9 @@ import ExpandLess from '@material-ui/icons/ExpandLess';
 import toLower from 'lodash/toLower';
 import { isMobileOnly } from 'react-device-detect';
 
-import { StyledAppBar, StyledToolbar, StyledMenuList, Container, DrawerContentContainer } from './styles';
+import { CATEGORIES } from '../../constants';
 
-const CATEGORIES = [ 'Pork', 'Chicken', 'Beef', 'Seafood', 'Pasta', 'Vegetables', 'Beverages', 'Desserts', 'Others' ];
+import { StyledAppBar, StyledToolbar, StyledMenuList, Container, DrawerContentContainer } from './styles';
 
 /**
  * Renders Menu List
@@ -32,18 +32,20 @@ function renderMenuList({ onClickItem }) {
                 to="/recipes"
                 aria-current="true"
                 activeClassName="active"
+                isActive={ ( match, location ) => match && location.search === '' }
             >
                 <MenuItem onClick={ onClickItem }>
                     All
                 </MenuItem>
             </NavLink>
-            { CATEGORIES.map(( category ) => (
+            { CATEGORIES.map(({ label: category }) => (
                 <NavLink
                     key={ category }
                     exact
-                    to={ `/recipes/${toLower( category )}` }
+                    to={ `/recipes?category=${toLower( category )}` }
                     aria-current="true"
                     activeClassName="active"
+                    isActive={ ( match, location ) => match && location.search.indexOf( toLower( category )) >= 0 }
                 >
                     <MenuItem onClick={ onClickItem }>
                         { category }
@@ -211,7 +213,10 @@ DesktopHeader.propTypes = {
 /**
  * Header componnent
  */
-function Header ({ history, location }) {
+function Header () {
+    const location = useLocation();
+    const history = useHistory();
+
     const [ open, setOpen ] = useState( false );
     const anchorRef = useRef( null );
 
@@ -263,9 +268,4 @@ function Header ({ history, location }) {
     );
 }
 
-Header.propTypes = {
-    history: PropTypes.object,
-    location: PropTypes.object
-}
-
-export default withRouter( Header );
+export default Header;

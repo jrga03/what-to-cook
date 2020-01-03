@@ -1,9 +1,9 @@
 /**
  *
- * Categories constants
+ * App constants
  *
  */
-const CATEGORIES = [
+export const CATEGORIES = [
     {
         label: 'Breakfast',
         id: 'breakfast',
@@ -78,4 +78,4 @@ const CATEGORIES = [
     }
 ];
 
-export default CATEGORIES;
+export const RECIPE_CARD_GUTTER_SIZE = 4;

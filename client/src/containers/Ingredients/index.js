@@ -6,7 +6,6 @@ import { gql } from 'apollo-boost';
 import { useQuery } from '@apollo/react-hooks';
 import startCase from 'lodash/startCase';
 
-import burger from 'images/burgers.jpg'; // eslint-disable-line import/no-unresolved
 import ItemCardList from '../../components/ItemCardList';
 
 import Wrapper from './styles';
@@ -34,8 +33,8 @@ function Ingredients() {
                 id,
                 label: startCase( name ),
                 selected: false,
-                image: burger, // TODO: REMOVE
-                imageTitle: 'Burger' // TODO: REMOVE
+                image: 'https://res.cloudinary.com/what-to-cook/image/upload/t_media_lib_thumb/v1576648639/sample.jpg', // TODO: REMOVE
+                imageTitle: 'FALLBACK' // TODO: REMOVE
             }));
 
             setIngredients( newIngredients );
