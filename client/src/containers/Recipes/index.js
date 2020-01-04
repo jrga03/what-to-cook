@@ -29,6 +29,10 @@ const GET_RECIPES = gql`
                     name
                 }
             }
+            tags {
+                id
+                name
+            }
         }
     }
 `;
@@ -40,7 +44,8 @@ function RecipeCardItem({ data, index, style }) {
     const {
         name,
         photo,
-        description
+        description,
+        tags
     } = data[ index ];
 
     // TODO: remove if all recipes have photos
@@ -60,6 +65,7 @@ function RecipeCardItem({ data, index, style }) {
             name={ name }
             photo={ thumbnail || 'https://res.cloudinary.com/what-to-cook/image/upload/t_media_lib_thumb/v1576648639/sample.jpg' } // TODO:
             description={ description }
+            tags={ tags }
         />
     );
 }
@@ -83,14 +89,6 @@ function Recipes() {
     const windowSize = useWindowSize();
     const headerHeight = useHeaderHeight();
 
-    if ( loading ) {
-        return (
-            <LoaderWrapper>
-                <Loader />
-            </LoaderWrapper>
-        );
-    }
-
     /**
      * Fetches ID for list item
      * @param {number} index - Item index
@@ -100,10 +98,9 @@ function Recipes() {
         return recipes[ index ].id;
     }
 
-    const width = windowSize.width - ( RECIPE_CARD_GUTTER_SIZE * 2 );
-    const maxSize = 200;
-    const computedSize = width * 0.3; // one-third of screen width
-    const itemSize = computedSize < maxSize ? computedSize : maxSize;
+    const listWidth = Math.min( windowSize.width, 600 ) - ( RECIPE_CARD_GUTTER_SIZE * 2 );
+    const computedItemSize = listWidth * 0.4; // one-third of list width
+    const itemSize = Math.min( computedItemSize, 150 );
     const listHeight = windowSize.height - headerHeight - 52;
 
     return (
@@ -123,17 +120,23 @@ function Recipes() {
                     </InputAdornment>
                 }
             />
-            <List
-                height={ listHeight }
-                width={ width }
-                itemCount={ data.recipes.length }
-                itemSize={ itemSize }
-                itemData={ data.recipes }
-                itemKey={ getKey }
-                innerElementType={ innerElementType }
-            >
-                { RecipeCardItem }
-            </List>
+            { loading ? (
+                <LoaderWrapper height={ listHeight }>
+                    <Loader />
+                </LoaderWrapper>
+            ) : (
+                <List
+                    height={ listHeight }
+                    width={ listWidth }
+                    itemCount={ data.recipes.length }
+                    itemSize={ itemSize }
+                    itemData={ data.recipes }
+                    itemKey={ getKey }
+                    innerElementType={ innerElementType }
+                >
+                    { RecipeCardItem }
+                </List>
+            ) }
         </Wrapper>
     );
 }
