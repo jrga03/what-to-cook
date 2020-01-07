@@ -47,17 +47,6 @@ RecipeSchema.statics.findTags = async ( tagIds ) => {
     }
 }
 
-RecipeSchema.statics.findRecipeByTags = async ( tagNames ) => {
-    const Recipe = mongoose.model( 'recipe' );
-
-    try {
-        const recipes = await Recipe.find({ tags: { $in: tagNames }}) // TODO: something is wrong! Find intersection of tags
-        return recipes;
-    } catch ( error ) {
-        throw error;
-    }
-}
-
 /**
  *
  * Mutation methods

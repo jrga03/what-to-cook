@@ -8,9 +8,39 @@ const {
     GraphQLString,
     GraphQLInputObjectType
 } = require( 'graphql' );
+const Fuse = require( 'fuse.js' );
+
 const Ingredient = model( 'ingredient' );
 const Recipe = model( 'recipe' );
 const Tag = model( 'tag' );
+
+const options = {
+    id: '',
+    shouldSort: true,
+    threshold: 0.5,
+    location: 0,
+    distance: 100,
+    maxPatternLength: 32,
+    minMatchCharLength: 2,
+    keys: [
+        {
+            name: 'name',
+            weight: 0.5
+        },
+        {
+            name: 'description',
+            weight: 0.05
+        },
+        {
+            name: 'ingredients.ingredient.name',
+            weight: 0.25
+        },
+        {
+            name: 'tag.name',
+            weight: 0.2
+        }
+    ]
+};
 
 const IngredientType = new GraphQLObjectType({
     name: 'IngredientType',
@@ -73,18 +103,19 @@ const query = new GraphQLObjectType({
         recipes: {
             type: GraphQLList( RecipeType ),
             args: {
+                search: { type: GraphQLString },
                 tags: { type: GraphQLList( GraphQLNonNull( GraphQLString ) ) }
             },
-            async resolve( parentValue, { tags = []}) {
+            async resolve( parentValue, { search = '', tags = []}) {
+                let query = {};
                 if ( tags.length > 0 ) {
-                    const recipes = await Recipe.findRecipeByTags( tags ); // TODO: fix method
-                    return recipes;
+                    query = { tags: { $all: tags }}
                 }
 
                 const recipes = await new Promise( function( resolve, reject ) {
                     try {
                         Recipe
-                            .find({})
+                            .find( query )
                             .populate( 'tags' )
                             .exec( function( error, _recipes ) {
                                 Ingredient.populate(
@@ -98,7 +129,12 @@ const query = new GraphQLObjectType({
                     } catch ( error ) {
                         reject( error );
                     }
-                })
+                });
+
+                if ( search !== '' ) {
+                    const fuse = new Fuse( recipes, options );
+                    return fuse.search( search );
+                }
 
                 return recipes;
             }
