@@ -1,6 +1,6 @@
-import React, { useState, useRef } from 'react';
+import React, { forwardRef, useState, useRef } from 'react';
 import PropTypes from 'prop-types';
-import { NavLink, useLocation, useHistory } from 'react-router-dom';
+import { NavLink, useLocation, useHistory, useRouteMatch } from 'react-router-dom';
 import SwipeableDrawer from '@material-ui/core/SwipeableDrawer';
 import Popper from '@material-ui/core/Popper';
 import Grow from '@material-ui/core/Grow';
@@ -19,44 +19,48 @@ import { isMobileOnly } from 'react-device-detect';
 
 import { CATEGORIES } from '../../constants';
 
-import { StyledAppBar, StyledToolbar, StyledMenuList, Container, DrawerContentContainer } from './styles';
+import {
+    StyledAppBar,
+    StyledToolbar,
+    StyledMenuList,
+    Container,
+    DrawerContentContainer
+} from './styles';
 
 /**
- * Renders Menu List
+ * Menu List component
  */
-function renderMenuList({ onClickItem }) {
-    return (
-        <StyledMenuList>
+const MenuList = forwardRef(({ onClickItem }, ref ) => (
+    <StyledMenuList ref={ ref }>
+        <NavLink
+            exact
+            to="/recipes"
+            aria-current="true"
+            activeClassName="active"
+            isActive={ ( match, location ) => match && location.search === '' }
+        >
+            <MenuItem onClick={ onClickItem }>
+                All
+            </MenuItem>
+        </NavLink>
+        { CATEGORIES.map(({ label: category }) => (
             <NavLink
+                key={ category }
                 exact
-                to="/recipes"
+                to={ `/recipes?category=${toLower( category )}` }
                 aria-current="true"
                 activeClassName="active"
-                isActive={ ( match, location ) => match && location.search === '' }
+                isActive={ ( match, location ) => match && location.search.indexOf( toLower( category )) >= 0 }
             >
                 <MenuItem onClick={ onClickItem }>
-                    All
+                    { category }
                 </MenuItem>
             </NavLink>
-            { CATEGORIES.map(({ label: category }) => (
-                <NavLink
-                    key={ category }
-                    exact
-                    to={ `/recipes?category=${toLower( category )}` }
-                    aria-current="true"
-                    activeClassName="active"
-                    isActive={ ( match, location ) => match && location.search.indexOf( toLower( category )) >= 0 }
-                >
-                    <MenuItem onClick={ onClickItem }>
-                        { category }
-                    </MenuItem>
-                </NavLink>
-            )) }
-        </StyledMenuList>
-    );
-}
+        )) }
+    </StyledMenuList>
+) );
 
-renderMenuList.propTypes = {
+MenuList.propTypes = {
     onClickItem: PropTypes.func.isRequired
 }
 
@@ -67,9 +71,10 @@ function MobileHeader ({
     open,
     onClickSurpriseMe,
     recipesButtonRef,
-    recipeListToggle,
-    addRecipe
+    recipeListToggle
 }) {
+    const location = useLocation();
+    const history = useHistory();
     const [ openDrawer, toggleDrawer ] = useState( false );
 
     /**
@@ -85,12 +90,16 @@ function MobileHeader ({
     }
 
     /**
-     * Click Add Recipe handler
-     * @returns {Function}
+     * Handles redirecting of route
+     * @param {string} route - Route URL
      */
-    function onClickAdd() {
-        addRecipe();
-        toggleDrawer( false );
+    function handleRedirectRoute( route ) {
+        return function() {
+            if ( location.pathname !== route ) {
+                history.push( route );
+            }
+            toggleDrawer( false );
+        }
     }
 
     return (
@@ -105,6 +114,9 @@ function MobileHeader ({
             </NavLink>
             <SwipeableDrawer open={ openDrawer } onOpen={ handleToggleDrawer( true ) } onClose={ handleToggleDrawer( false ) }>
                 <DrawerContentContainer>
+                    <Typography variant="h6" noWrap>
+                        What To Cook
+                    </Typography>
                     <Button onClick={ onClickSurpriseMe }>
                         Surprise Me!
                     </Button>
@@ -118,9 +130,15 @@ function MobileHeader ({
                         { open ? <ExpandLess /> : <ExpandMore /> }
                     </Button>
                     <Collapse in={ open } timeout="auto">
-                        { renderMenuList({ onClickItem: handleToggleDrawer( false ) }) }
+                        <MenuList onClickItem={ handleToggleDrawer( false ) } />
                     </Collapse>
-                    <Button onClick={ onClickAdd }>
+                    <Button onClick={ handleRedirectRoute( '/categories' ) }>
+                        Categories
+                    </Button>
+                    <Button onClick={ handleRedirectRoute( '/ingredients' ) }>
+                        Ingredients
+                    </Button>
+                    <Button onClick={ handleRedirectRoute( '/recipe/add' ) }>
                         Add a Recipe
                     </Button>
                     <div />
@@ -134,8 +152,7 @@ MobileHeader.propTypes = {
     open: PropTypes.bool.isRequired,
     onClickSurpriseMe: PropTypes.func.isRequired,
     recipesButtonRef: PropTypes.object.isRequired,
-    recipeListToggle: PropTypes.func.isRequired,
-    addRecipe: PropTypes.func.isRequired
+    recipeListToggle: PropTypes.func.isRequired
 };
 
 /**
@@ -146,10 +163,25 @@ function DesktopHeader ({
     onClickSurpriseMe,
     recipesButtonRef,
     recipeListToggle,
-    recipeListClose,
-    addRecipe,
-    routeName
+    recipeListClose
 }) {
+    const location = useLocation();
+    const history = useHistory();
+    const matchAddRecipe = useRouteMatch( '/recipe/add' );
+    const isAddRecipe = matchAddRecipe && matchAddRecipe.isExact;
+
+    /**
+     * Handles redirecting of route
+     * @param {string} route - Route URL
+     */
+    function handleRedirectRoute( route ) {
+        return function() {
+            if ( location.pathname !== route ) {
+                history.push( route );
+            }
+        }
+    }
+
     return (
         <>
             <NavLink exact to="/">
@@ -183,7 +215,7 @@ function DesktopHeader ({
                         >
                             <Paper id="menu-list-grow">
                                 <ClickAwayListener onClickAway={ recipeListClose }>
-                                    { renderMenuList({ onClickItem: recipeListClose }) }
+                                    <MenuList onClickItem={ recipeListClose } />
                                 </ClickAwayListener>
                             </Paper>
                         </Grow>
@@ -191,8 +223,8 @@ function DesktopHeader ({
                 </Popper>
                 <div />
             </Container>
-            { routeName !== '/recipe/add' && (
-                <Button onClick={ addRecipe }>
+            { !isAddRecipe && (
+                <Button onClick={ handleRedirectRoute( '/recipe/add' ) }>
                     Add a Recipe
                 </Button>
             ) }
@@ -205,18 +237,13 @@ DesktopHeader.propTypes = {
     onClickSurpriseMe: PropTypes.func.isRequired,
     recipesButtonRef: PropTypes.object.isRequired,
     recipeListToggle: PropTypes.func.isRequired,
-    recipeListClose: PropTypes.func.isRequired,
-    addRecipe: PropTypes.func.isRequired,
-    routeName: PropTypes.string.isRequired
+    recipeListClose: PropTypes.func.isRequired
 };
 
 /**
  * Header componnent
  */
 function Header () {
-    const location = useLocation();
-    const history = useHistory();
-
     const [ open, setOpen ] = useState( false );
     const anchorRef = useRef( null );
 
@@ -240,20 +267,12 @@ function Header () {
 
     const onClickSurpriseMe = () => console.log( 'SURPRISE!' );
 
-    const addRecipe = () => {
-        if ( location.pathname !== '/recipe/add' ) {
-            history.push( '/recipe/add' );
-        }
-    };
-
     const headerProps = {
         open,
         onClickSurpriseMe,
         recipesButtonRef: anchorRef,
         recipeListToggle: handleToggle,
-        recipeListClose: handleClose,
-        addRecipe,
-        routeName: location.pathname
+        recipeListClose: handleClose
     };
 
     return (

@@ -66,6 +66,11 @@ export const DrawerContentContainer = styled.div`
     flex-direction: column;
     align-items: flex-start;
 
+    h6 {
+        padding-left: 4px;
+        margin-bottom: 8px;
+    }
+
     & > div, button {
         width: 100%;
     }
