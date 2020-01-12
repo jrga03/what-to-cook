@@ -1,7 +1,7 @@
 import React, { lazy, Suspense } from 'react';
 import { Helmet } from 'react-helmet';
-import { Switch, Route, Redirect } from 'react-router';
-import styled from 'styled-components';
+import { Switch, Route, Redirect, useRouteMatch } from 'react-router-dom';
+import styled, { css } from 'styled-components';
 
 import Loader from '../../components/Loader';
 
@@ -12,6 +12,7 @@ import Header from "../Header";
 const Dashboard = lazy(() => import( "../Dashboard" ));
 const AddRecipe = lazy(() => import( "../AddRecipe" ));
 const Recipes = lazy(() => import( "../Recipes" ));
+const Recipe = lazy(() => import( "../Recipe" ));
 
 const Container = styled.div`
     display: flex;
@@ -21,16 +22,14 @@ const Container = styled.div`
     height: 100vh;
 `;
 
-export const Wrapper = styled.div`
+export const LoaderWrapper = styled.div`
     display: flex;
     align-items: center;
     justify-content: center;
-    font-size: 2rem;
     height: 100%;
 `;
 
-const PaddedWrapper = styled.div`
-    height: 100vh;
+const padTopCss = css`
     padding-top: 56px;
 
     @media screen and (orientation: landscape) {
@@ -42,23 +41,35 @@ const PaddedWrapper = styled.div`
     }
 `;
 
+const ContentWrapper = styled.div`
+    height: 100vh;
+    ${({ topPadded }) => topPadded && padTopCss }
+`;
+
 /**
  * App componnent
  */
 function App () {
+    const recipeRouteMatch = useRouteMatch( '/recipe/:id' );
+    const isRecipeRoute = recipeRouteMatch && recipeRouteMatch.isExact;
+
     return (
         <Container>
             <Helmet>
                 <title>What To Cook?</title>
                 <meta name="description" content="helps decide on what to cook" />
             </Helmet>
-            <Header />
-            <PaddedWrapper>
+
+            { !isRecipeRoute && (
+                <Header />
+            ) }
+
+            <ContentWrapper topPadded={ !isRecipeRoute }>
                 <Suspense
                     fallback={
-                        <Wrapper>
+                        <LoaderWrapper>
                             <Loader />
-                        </Wrapper>
+                        </LoaderWrapper>
                     }
                 >
                     <Switch>
@@ -68,12 +79,15 @@ function App () {
                         <Route exact path={ [ '/categories', '/ingredients' ] } component={ Dashboard } />
                         <Route exact path="/recipe/add" component={ AddRecipe } />
                         <Route exact path="/recipes" component={ Recipes } />
-                        <Route exact path="/categories/*" component={ ComingSoon } />
+                        <Route exact path="/recipe/:id" component={ Recipe } />
+                        <Route path={[ '/recipe', '/recipe/*/*' ]}>
+                            <Redirect to="/recipes" />
+                        </Route>
                         <Route exact path="/coming-soon" component={ ComingSoon } />
                         <Route component={ NotFoundPage } />
                     </Switch>
                 </Suspense>
-            </PaddedWrapper>
+            </ContentWrapper>
         </Container>
     );
 }
