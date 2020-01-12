@@ -3,8 +3,9 @@ import SyncLoader from 'react-spinners/SyncLoader';
 
 export default () => (
     <SyncLoader
-        size={ 50 }
+        size="2rem"
         margin={ 20 }
         color="#aeaeae"
+        width="50%"
     />
 );
