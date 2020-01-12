@@ -145,7 +145,24 @@ const query = new GraphQLObjectType({
                 id: { type: GraphQLNonNull( GraphQLID ) }
             },
             async resolve( parentValue, { id }) {
-                const recipe = await Recipe.findById( id );
+                const recipe = await new Promise( function( resolve, reject ) {
+                    try {
+                        Recipe
+                            .findById( id )
+                            .populate( 'tags' )
+                            .exec( function( error, _recipes ) {
+                                Ingredient.populate(
+                                    _recipes,
+                                    { path: 'ingredients.ingredient' },
+                                    function( error, recipesWithPopulatedIngredients ) {
+                                        resolve( recipesWithPopulatedIngredients );
+                                    }
+                                )
+                            });
+                    } catch ( error ) {
+                        reject( error );
+                    }
+                });
                 return recipe;
             }
         },
