@@ -313,7 +313,7 @@ function AddRecipe() {
         try {
             const uploaded = await upload(
                 await compressImage( file ),
-                { folder: 'recipe_thumbnails' }
+                { folder: 'recipes' }
             );
 
             return uploaded.data.secure_url;
