@@ -15,13 +15,7 @@ function RecipeCardItem({ data, index, style }) {
         description,
         tags
     } = data[ index ];
-
-    // TODO: remove if all recipes have photos
-    let thumbnail = photo;
-    if ( thumbnail ) {
-        thumbnail = photo.replace( '/image/upload', '/image/upload/t_media_lib_thumb' );
-    }
-    // TODO:
+    const thumbnail = photo.replace( '/image/upload', '/image/upload/t_media_lib_thumb' );
 
     return (
         <RecipeCard
@@ -32,7 +26,7 @@ function RecipeCardItem({ data, index, style }) {
             }}
             id={ id }
             name={ name }
-            photo={ thumbnail || 'https://res.cloudinary.com/what-to-cook/image/upload/t_media_lib_thumb/v1576648639/sample.jpg' } // TODO:
+            photo={ thumbnail }
             description={ description }
             tags={ tags }
         />
