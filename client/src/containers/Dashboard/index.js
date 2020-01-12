@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Switch, Link, Route, useLocation } from 'react-router-dom';
 import Paper from '@material-ui/core/Paper';
 import Tabs from '@material-ui/core/Tabs';
@@ -15,6 +15,10 @@ import Wrapper from './styles';
 function Dashboard() {
     const { pathname } = useLocation();
     const [ activeTab, setActiveTab ] = useState( Number( pathname === '/ingredients' ));
+
+    useEffect(() => {
+        setActiveTab( Number( pathname === '/ingredients' ));
+    }, [pathname])
 
     /**
      * Handler for tab change
