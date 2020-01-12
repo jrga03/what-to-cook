@@ -71,9 +71,9 @@ function Recipes() {
     const history = useHistory();
     const urlQuery = new URLSearchParams( search );
     const category = urlQuery.get( 'category' );
+    const categories = new Set( category ? category.split( ',' ) : []);
 
     const [ searchTerm, setSearchTerm ] = useState( '' );
-    const [ recipes, setRecipes ] = useState([]);
     const [ selectedTags, setSelectedTags ] = useState( new Set([]));
 
     const debouncedSearchTerm = useDebounce( searchTerm, 300 );
@@ -82,32 +82,37 @@ function Recipes() {
         search: debouncedSearchTerm || '',
         tags: Array.from( selectedTags )
     };
-    const { data, loading } = useQuery( GET_RECIPES, { variables, displayName: 'getRecipesQuery' });
-    const { data: tagsData, loading: tagsLoading } = useQuery( GET_TAGS, { displayName: 'getTagsQuery' });
+
+    const {
+        data: { recipes } = {},
+        loading
+    } = useQuery( GET_RECIPES, { variables, displayName: 'getRecipesQuery' });
+
+    const {
+        data: { tags } = {},
+        loading: tagsLoading
+    } = useQuery( GET_TAGS, { displayName: 'getTagsQuery' });
+
     const windowSize = useWindowSize();
     const headerHeight = useHeaderHeight();
-
-    /**
-     * Process data from `getRecipesQuery`
-     */
-    useEffect(() => {
-        data && data.recipes && setRecipes( data.recipes );
-    }, [data]);
 
     /**
      * Process data from `getTagsQuery`
      */
     useEffect(
         () => {
-            if ( tagsData && tagsData.tags ) {
-                const selectedCategory = tagsData.tags.find(({ name }) => name === category );
+            if ( tags && categories.size > 0 ) {
+                const selectedCategories = tags.reduce(( selected, { name, id }) => {
+                    if ( categories.has( name ) ) {
+                        selected.push( id );
+                    }
+                    return selected;
+                }, []);
 
-                if ( selectedCategory ) {
-                    setSelectedTags( new Set([selectedCategory.id]) )
-                }
+                setSelectedTags( new Set( selectedCategories ) )
             }
         },
-        [tagsData] // eslint-disable-line react-hooks/exhaustive-deps
+        [tags] // eslint-disable-line react-hooks/exhaustive-deps
     );
 
     /**
@@ -134,7 +139,7 @@ function Recipes() {
      */
     function handleOnClickTag({ id, name }) {
         return function() {
-            if ( name === category ) return;
+            if ( categories.has( name ) ) return;
 
             const selectedTagsCopy = new Set( selectedTags );
 
@@ -188,7 +193,7 @@ function Recipes() {
 
             { !tagsLoading && (
                 <TagList
-                    tags={ tagsData.tags }
+                    tags={ tags }
                     selectedTags={ selectedTags }
                     onClickTag={ handleOnClickTag }
                 />
