@@ -1,6 +1,6 @@
 import React from 'react';
 import PropTypes from 'prop-types';
-import { Link } from 'react-router-dom';
+import { Link, useLocation } from 'react-router-dom';
 import Typography from '@material-ui/core/Typography';
 import Chip from '@material-ui/core/Chip';
 import startCase from 'lodash/startCase';
@@ -17,12 +17,19 @@ import {
 } from './styles';
 
 function RecipeCard({ style, id, name, photo, description, tags }) {
+    const { pathname, search } = useLocation();
+
     return (
-        <StyledCardWrapper style={ style }>
-            <Link
-                to={ `/recipe/${id}` }
-                className="link"
-            >
+        <Link
+            to={{
+                pathname: `/recipe/${id}`,
+                state: {
+                    from: `${pathname}${search}`
+                }
+            }}
+            className="link"
+        >
+            <StyledCardWrapper style={ style }>
                 <StyledCard>
                     <StyledCardMedia
                         image={ photo }
@@ -51,8 +58,8 @@ function RecipeCard({ style, id, name, photo, description, tags }) {
                         </TagsWrapper>
                     </StyledCardContent>
                 </StyledCard>
-            </Link>
-        </StyledCardWrapper>
+            </StyledCardWrapper>
+        </Link>
     );
 }
 
