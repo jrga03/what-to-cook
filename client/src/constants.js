@@ -79,3 +79,4 @@ export const CATEGORIES = [
 ];
 
 export const RECIPE_CARD_GUTTER_SIZE = 4;
+export const LIKE_FILL_COLOR = '#ff4c4c';
