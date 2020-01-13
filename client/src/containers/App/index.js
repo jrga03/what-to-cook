@@ -51,7 +51,9 @@ const ContentWrapper = styled.div`
  */
 function App () {
     const recipeRouteMatch = useRouteMatch( '/recipe/:id' );
-    const isRecipeRoute = recipeRouteMatch && recipeRouteMatch.isExact;
+    const isRecipeRoute = recipeRouteMatch
+        && recipeRouteMatch.url !== '/recipe/add'
+        && recipeRouteMatch.isExact;
 
     return (
         <Container>
