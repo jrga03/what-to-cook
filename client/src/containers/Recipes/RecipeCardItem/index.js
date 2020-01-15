@@ -7,7 +7,7 @@ import RecipeCard from '../../../components/RecipeCard';
 /**
  * RecipeCardItem component
  */
-function RecipeCardItem({ data, index, style }) {
+function RecipeCardItem({ data, index, style, likedRecipes }) {
     const {
         id,
         name,
@@ -16,6 +16,8 @@ function RecipeCardItem({ data, index, style }) {
         tags
     } = data[ index ];
     const thumbnail = photo.replace( '/image/upload', '/image/upload/t_media_lib_thumb' );
+
+    const liked = likedRecipes && likedRecipes.has( id );
 
     return (
         <RecipeCard
@@ -29,6 +31,7 @@ function RecipeCardItem({ data, index, style }) {
             photo={ thumbnail }
             description={ description }
             tags={ tags }
+            liked={ liked }
         />
     );
 }
@@ -36,7 +39,8 @@ function RecipeCardItem({ data, index, style }) {
 RecipeCardItem.propTypes = {
     data: PropTypes.arrayOf( PropTypes.object ),
     index: PropTypes.number,
-    style: PropTypes.object
+    style: PropTypes.object,
+    likedRecipes: PropTypes.any // `Set` (not yet available in prop-types)
 }
 
 export default RecipeCardItem;

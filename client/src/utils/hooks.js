@@ -20,7 +20,7 @@ export function useWindowSize() {
         if ( !isClient ) {
             return false;
         }
-        
+
         function handleResize() {
             setWindowSize( getSize());
         }
@@ -64,4 +64,38 @@ export function useDebounce( value, delay = 500 ) {
     );
 
     return debouncedValue;
+}
+
+/**
+ * Hook for accessing/updating local storage item
+ * @param {string} key - Local storage item key
+ * @param {*} fallbackValue
+ * @returns {Array}
+ */
+export function useLocalStorage( key, fallbackValue ) {
+    // State to store our value
+    // Pass initial state function to useState so logic is only executed once
+    const [ storedValue, setStoredValue ] = useState(() => {
+        try {
+            const item = localStorage.getItem( key );
+            return item ? JSON.parse( item ) : fallbackValue;
+        } catch ( error ) {
+            return fallbackValue;
+        }
+    });
+
+    const setValue = ( value ) => {
+        try {
+            // Allow value to be a function so we have same API as useState
+            const valueToStore = value instanceof Function
+                ? value( storedValue )
+                : value;
+            setStoredValue( valueToStore );
+            localStorage.setItem( key, JSON.stringify( valueToStore ));
+        } catch ( error ) {
+            console.log( error );
+        }
+    };
+
+    return [ storedValue, setValue ];
 }

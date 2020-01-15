@@ -4,8 +4,10 @@ import { Link, useLocation } from 'react-router-dom';
 import Typography from '@material-ui/core/Typography';
 import Chip from '@material-ui/core/Chip';
 import startCase from 'lodash/startCase';
+import Favorite from '@material-ui/icons/Favorite';
 
 import { toHSL } from '../../utils/stringToColor';
+import { LIKE_FILL_COLOR } from '../../constants';
 
 import {
     StyledCardWrapper,
@@ -16,7 +18,7 @@ import {
     TagsWrapper
 } from './styles';
 
-function RecipeCard({ style, id, name, photo, description, tags }) {
+function RecipeCard({ style, id, name, photo, description, tags, liked }) {
     const { pathname, search } = useLocation();
 
     return (
@@ -34,7 +36,9 @@ function RecipeCard({ style, id, name, photo, description, tags }) {
                     <StyledCardMedia
                         image={ photo }
                         title={ name }
-                    />
+                    >
+                        { liked && <Favorite style={{ fill: LIKE_FILL_COLOR }} /> }
+                    </StyledCardMedia>
                     <StyledCardContent>
                         <TextWrapper>
                             <Typography className="recipe-name" component="h6" variant="h6" gutterBottom color="textPrimary">
@@ -68,12 +72,14 @@ RecipeCard.propTypes = {
     id: PropTypes.string.isRequired,
     name: PropTypes.string.isRequired,
     photo: PropTypes.string.isRequired,
-    description: PropTypes.string
+    description: PropTypes.string,
+    liked: PropTypes.bool
 }
 
 RecipeCard.defaultProps = {
     style: {},
-    description: ''
+    description: '',
+    liked: false
 }
 
 export default RecipeCard;

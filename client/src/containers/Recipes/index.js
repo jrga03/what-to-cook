@@ -11,15 +11,22 @@ import Typography from '@material-ui/core/Typography';
 import Button from '@material-ui/core/Button';
 import Fade from '@material-ui/core/Fade';
 
-import { RECIPE_CARD_GUTTER_SIZE } from '../../constants';
+import { RECIPE_CARD_GUTTER_SIZE, LIKED_RECIPES } from '../../constants';
 import Loader from '../../components/Loader';
 
-import { useWindowSize, useHeaderHeight, useDebounce } from '../../utils/hooks';
+import {
+    useWindowSize,
+    useHeaderHeight,
+    useDebounce,
+    useLocalStorage
+} from '../../utils/hooks';
 
 import RecipeCardItem from './RecipeCardItem';
 import TagList from './TagList';
 
 import { CenterItemWrapper, Wrapper } from './styles';
+
+const MemoizedRecipeCardItem = memo( RecipeCardItem, areEqual );
 
 const GET_RECIPES = gql`
     query recipes( $search: String, $tags: [String!] ) {
@@ -72,6 +79,9 @@ function Recipes() {
     const urlQuery = new URLSearchParams( search );
     const category = urlQuery.get( 'category' );
     const categories = new Set( category ? category.split( ',' ) : []);
+
+    const [likedRecipes] = useLocalStorage( LIKED_RECIPES, [] );
+    const likedRecipesSet = new Set( likedRecipes );
 
     const [ searchTerm, setSearchTerm ] = useState( '' );
     const [ selectedTags, setSelectedTags ] = useState( new Set([]));
@@ -228,7 +238,12 @@ function Recipes() {
                             itemKey={ getKey }
                             innerElementType={ innerElementType }
                         >
-                            { memo( RecipeCardItem, areEqual ) }
+                            { ( props ) => (
+                                <MemoizedRecipeCardItem
+                                    { ...props }
+                                    likedRecipes={ likedRecipesSet }
+                                />
+                            ) }
                         </List>
                     </Fade>
                 )
