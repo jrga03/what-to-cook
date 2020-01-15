@@ -29,11 +29,13 @@ import SwipeableViews from 'react-swipeable-views';
 import { bindKeyboard } from 'react-swipeable-views-utils';
 import startCase from 'lodash/startCase';
 
-import { LIKE_FILL_COLOR } from '../../constants';
+import { LIKE_FILL_COLOR, LIKED_RECIPES } from '../../constants';
 import Loader from '../../components/Loader';
 import { toHSL } from '../../utils/stringToColor';
+import { useLocalStorage } from '../../utils/hooks';
 
 import { LoaderWrapper, Wrapper, ContentWrapper } from './styles';
+import Ingredients from './Ingredients';
 
 const BindKeyboardSwipeableViews = bindKeyboard( SwipeableViews );
 
@@ -67,6 +69,8 @@ function Recipe() {
     const { id } = useParams();
     const history = useHistory();
     const { state: { from } = {} } = useLocation();
+    const [ likedRecipes, setLikedRecipes ] = useLocalStorage( LIKED_RECIPES, [] );
+    const likedRecipesSet = new Set( likedRecipes );
 
     const [ optionsAnchorEl, setOptionsAnchorEl ] = useState( null );
     const [ selectedTab, setSelectedTab ] = useState( 0 );
@@ -86,12 +90,21 @@ function Recipe() {
         setOptionsAnchorEl( null );
     };
 
+    function handleLikeClick() {
+        if ( likedRecipesSet.has( id )) {
+            likedRecipesSet.delete( id );
+        } else {
+            likedRecipesSet.add( id );
+        }
+        setLikedRecipes( Array.from( likedRecipesSet ));
+    }
+
     function handleSelectTab( event, tabIndex ) {
         setSelectedTab( tabIndex );
     }
 
     function handleChangeIndex( index ) {
-        setSelectedTab( index )
+        setSelectedTab( index );
     }
 
     const {
@@ -117,8 +130,6 @@ function Recipe() {
         }
     }, [instructions])
 
-    const LIKED = true; // TODO:
-
     return (
         loading ? (
             <LoaderWrapper>
@@ -127,7 +138,7 @@ function Recipe() {
         ) : (
             <Wrapper>
                 <Helmet>
-                    <title>{ name }</title>
+                    <title>Recipe - { name }</title>
                     <meta name="description" content={ `${name} recipe` } />
                     <meta name="description" content={ description } />
                 </Helmet>
@@ -142,8 +153,8 @@ function Recipe() {
                             </IconButton>
                         </div>
                         <div>
-                            <IconButton>
-                                { LIKED
+                            <IconButton onClick={ handleLikeClick }>
+                                { likedRecipesSet.has( id )
                                     ? <Favorite style={{ fill: LIKE_FILL_COLOR }} />
                                     : <FavoriteBorder style={{ fill: LIKE_FILL_COLOR }} />
                                 }
@@ -178,14 +189,17 @@ function Recipe() {
                 </Card>
 
                 <ContentWrapper>
-                    <Typography component="p" variant="p" gutterBottom>
+                    <Typography className="description" component="p" variant="caption">
                         { description }
                     </Typography>
 
                     { tags.map(( tag ) => (
                         <Chip
                             key={ tag.id }
-                            style={{ backgroundColor: toHSL( tag.id ) }}
+                            style={{
+                                backgroundColor: toHSL( tag.id ),
+                                margin: '0 4px 4px 0'
+                            }}
                             size="small"
                             label={ startCase( tag.name ) }
                         />
@@ -201,20 +215,18 @@ function Recipe() {
                         variant="fullWidth"
                     >
                         <Tab label="Ingredients" />
-                        <Tab label="Direction" />
+                        <Tab label="Instructions" />
                     </Tabs>
                 </Paper>
-                <BindKeyboardSwipeableViews index={ selectedTab } onChangeIndex={ handleChangeIndex }>
+                <BindKeyboardSwipeableViews index={ selectedTab } onChangeIndex={ handleChangeIndex } animateHeight>
                     <ContentWrapper>
-                        <div>
-                            FOO
-                        </div>
+                        <Ingredients ingredients={ ingredients } />
                     </ContentWrapper>
                     <ContentWrapper>
                         <Editor
                             readOnly
                             editorState={ editorState }
-                            />
+                        />
                     </ContentWrapper>
                 </BindKeyboardSwipeableViews>
             </Wrapper>

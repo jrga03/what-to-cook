@@ -27,6 +27,8 @@ export const Wrapper = styled.main`
     }
 
     .MuiCardContent-root {
+        padding: 12px !important;
+
         h6 {
             margin: 0;
         }
@@ -34,6 +36,11 @@ export const Wrapper = styled.main`
 `;
 
 export const ContentWrapper = styled.div`
-    padding: 8px;
+    padding: 12px;
     flex: 1;
+    width: calc( 100% - 24px );
+
+    .description {
+        margin: 12px 0;
+    }
 `;
