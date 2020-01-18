@@ -8,29 +8,53 @@ import Zoom from '@material-ui/core/Zoom';
 
 import {
     StyledCard,
-    CardMediaWrapper,
     StyledCheckCircle
 } from './styles';
 
 /**
+ * Typography types for label
+ */
+const labelTypes = {
+    component: {
+        1: 'h4',
+        2: 'h5',
+        3: 'span'
+    },
+    variant: {
+        1: 'h4',
+        2: 'h5',
+        3: 'caption'
+    }
+};
+
+/**
  * ItemCard component
  */
-function ItemCard({ width, image, imageTitle, label, onClick, selected }) {
+function ItemCard({ gridColumns, width, image, imageTitle, label, onClick, selected }) {
     return (
         <StyledCard square width={ width }>
-            <CardActionArea onClick={ onClick }>
-                <CardContent>
-                    <CardMediaWrapper>
-                        <CardMedia
-                            image={ image }
-                            title={ imageTitle }
-                        />
-                    </CardMediaWrapper>
-                    <Typography component="h6" variant="caption">
-                        { label }
-                    </Typography>
-                </CardContent>
-            </CardActionArea>
+            <CardMedia
+                image={ image }
+                title={ imageTitle }
+                style={{
+                    backgroundImage: `
+                        linear-gradient(
+                            to bottom,
+                            rgba(0, 0, 0, 0),
+                            rgba(0, 0, 0, 0.3)
+                        ),
+                        url(${image})
+                    `
+                }}
+            >
+                <CardActionArea onClick={ onClick }>
+                    <CardContent>
+                        <Typography component={ labelTypes.component[ gridColumns ] } variant={ labelTypes.variant[ gridColumns ] }>
+                            { label }
+                        </Typography>
+                    </CardContent>
+                </CardActionArea>
+            </CardMedia>
             <Zoom in={ selected }>
                 <StyledCheckCircle color="action" />
             </Zoom>
@@ -39,6 +63,7 @@ function ItemCard({ width, image, imageTitle, label, onClick, selected }) {
 }
 
 ItemCard.propTypes = {
+    gridColumns: PropTypes.number,
     width: PropTypes.number,
     image: PropTypes.string.isRequired,
     imageTitle: PropTypes.string,
@@ -48,6 +73,7 @@ ItemCard.propTypes = {
 }
 
 ItemCard.defaultProps = {
+    gridColumns: 1,
     width: 0,
     imageTitle: '',
     selected: false

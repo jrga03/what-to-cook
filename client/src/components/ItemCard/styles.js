@@ -8,6 +8,7 @@ export const StyledCard = styled( Card )`
 
     .MuiCardContent-root {
         display: flex;
+        justify-content: flex-end;
         flex-direction: column;
         padding: calc( 4% + 4px );
         height: ${({ width }) => width - 5}vw;
@@ -17,21 +18,18 @@ export const StyledCard = styled( Card )`
     .MuiTypography-root {
         flex: 0;
         line-height: unset;
+        color: #ffffff;
+        text-shadow: 0 1px 0 #7d7d7d;
     }
 }
-`;
-
-export const CardMediaWrapper = styled.div`
-    flex: 1;
-
-    .MuiCardMedia-root {
-        height: 100%;
-    }
 `;
 
 export const StyledCheckCircle = styled( CheckCircle )`
     position: absolute;
     top: 4px;
     right: 4px;
-    fill: #ffffff;
+
+    &.MuiSvgIcon-colorAction {
+        fill: #ffffff;
+    }
 `;

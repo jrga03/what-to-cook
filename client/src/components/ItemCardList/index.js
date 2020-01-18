@@ -28,6 +28,7 @@ function ItemCardList({
             { data.map(({ id, label, image, imageTitle, selected }, index ) => (
                 <GridListTile key={ id }>
                     <ItemCard
+                        gridColumns={ cols }
                         label={ label }
                         image={ image }
                         imageTitle={ imageTitle }
