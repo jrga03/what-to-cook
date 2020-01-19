@@ -65,10 +65,10 @@ const SAVE_RECIPE = gql`
 
 /**
  *
- * Add Recipe Component
+ * Recipe Form Component
  *
  */
-function AddRecipe() {
+function RecipeForm() {
     const history = useHistory();
     const headerHeight = useHeaderHeight();
 
@@ -457,7 +457,7 @@ function AddRecipe() {
 
             <TextFieldWrapper>
                 <Typography variant="h6">
-                    Directions
+                    Instructions
                 </Typography>
             </TextFieldWrapper>
 
@@ -500,4 +500,4 @@ function AddRecipe() {
     );
 }
 
-export default AddRecipe;
+export default RecipeForm;

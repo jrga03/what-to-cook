@@ -10,7 +10,7 @@ import ComingSoon from "../ComingSoon";
 import Header from "../Header";
 
 const Dashboard = lazy(() => import( "../Dashboard" ));
-const AddRecipe = lazy(() => import( "../AddRecipe" ));
+const RecipeForm = lazy(() => import( "../RecipeForm" ));
 const Recipes = lazy(() => import( "../Recipes" ));
 const Recipe = lazy(() => import( "../Recipe" ));
 
@@ -79,7 +79,7 @@ function App () {
                             <Redirect to="/categories" />
                         </Route>
                         <Route exact path={ [ '/categories', '/ingredients' ] } component={ Dashboard } />
-                        <Route exact path="/recipe/add" component={ AddRecipe } />
+                        <Route exact path="/recipe/add" component={ RecipeForm } />
                         <Route exact path="/recipes" component={ Recipes } />
                         <Route exact path="/recipe/:id" component={ Recipe } />
                         <Route path={[ '/recipe', '/recipe/*/*' ]}>
