@@ -12,7 +12,7 @@ import Header from "../Header";
 const Dashboard = lazy(() => import( "../Dashboard" ));
 const RecipeForm = lazy(() => import( "../RecipeForm" ));
 const Recipes = lazy(() => import( "../Recipes" ));
-const Recipe = lazy(() => import( "../Recipe" ));
+const RecipeDetails = lazy(() => import( "../RecipeDetails" ));
 
 const Container = styled.div`
     display: flex;
@@ -81,7 +81,7 @@ function App () {
                         <Route exact path={ [ '/categories', '/ingredients' ] } component={ Dashboard } />
                         <Route exact path="/recipe/add" component={ RecipeForm } />
                         <Route exact path="/recipes" component={ Recipes } />
-                        <Route exact path="/recipe/:id" component={ Recipe } />
+                        <Route exact path="/recipe/:id" component={ RecipeDetails } />
                         <Route path={[ '/recipe', '/recipe/*/*' ]}>
                             <Redirect to="/recipes" />
                         </Route>
