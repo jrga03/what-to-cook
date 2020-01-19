@@ -104,12 +104,29 @@ const query = new GraphQLObjectType({
             type: GraphQLList( RecipeType ),
             args: {
                 search: { type: GraphQLString },
-                tags: { type: GraphQLList( GraphQLNonNull( GraphQLString ) ) }
+                tags: { type: GraphQLList( GraphQLNonNull( GraphQLID ) ) },
+                ingredients: { type: GraphQLList( GraphQLNonNull( GraphQLID ) ) }
             },
-            async resolve( parentValue, { search = '', tags = []}) {
+            async resolve( parentValue, { search = '', tags = [], ingredients = []}) {
                 let query = {};
-                if ( tags.length > 0 ) {
-                    query = { tags: { $all: tags }}
+                const hasTags = tags.length > 0;
+                const hasIngredients = ingredients.length > 0;
+
+                switch ( true ) {
+                    case hasTags && hasIngredients:
+                        query = {
+                            tags: { $all: tags },
+                            'ingredients.ingredient': { $all: ingredients }
+                        }
+                        break;
+                    case hasTags:
+                        query = { tags: { $all: tags }}
+                        break;
+                    case hasIngredients:
+                        query = { 'ingredients.ingredient': { $all: ingredients }}
+                        break;
+                    default:
+                        query = {};
                 }
 
                 const recipes = await new Promise( function( resolve, reject ) {
@@ -163,6 +180,22 @@ const query = new GraphQLObjectType({
                         reject( error );
                     }
                 });
+                return recipe;
+            }
+        },
+        randomRecipe: {
+            type: RecipeType,
+            async resolve() {
+                const [randomRecipe] = await Recipe.aggregate().sample( 1 ).exec();
+
+                let recipe = randomRecipe;
+                if ( randomRecipe ) {
+                    const { _id, ...rest } = randomRecipe;
+                    recipe = {
+                        ...rest,
+                        id: _id
+                    };
+                }
                 return recipe;
             }
         },
