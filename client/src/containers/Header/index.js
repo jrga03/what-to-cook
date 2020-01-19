@@ -1,7 +1,7 @@
-import React, { forwardRef, useState, useRef } from 'react';
+import React, { forwardRef, useState, useEffect, useRef } from 'react';
 import PropTypes from 'prop-types';
 import { NavLink, useLocation, useHistory, useRouteMatch } from 'react-router-dom';
-import { useQuery } from '@apollo/react-hooks';
+import { useLazyQuery } from '@apollo/react-hooks';
 import { gql } from 'apollo-boost';
 import SwipeableDrawer from '@material-ui/core/SwipeableDrawer';
 import Popper from '@material-ui/core/Popper';
@@ -13,7 +13,6 @@ import Button from '@material-ui/core/Button';
 import IconButton from '@material-ui/core/IconButton';
 import Typography from '@material-ui/core/Typography';
 import Collapse from '@material-ui/core/Collapse';
-import Snackbar from '@material-ui/core/Snackbar';
 import MenuIcon from '@material-ui/icons/Menu';
 import ExpandMore from '@material-ui/icons/ExpandMore';
 import ExpandLess from '@material-ui/icons/ExpandLess';
@@ -239,16 +238,25 @@ function Header () {
     const history = useHistory();
 
     const [ open, setOpen ] = useState( false );
-    const [ snackbar, setSnackbar ] = useState({
-        open: false,
-        message: ''
-    });
 
     const anchorRef = useRef( null );
 
-    const {
-        refetch: getRandomRecipe
-    } = useQuery( GET_RANDOM_RECIPE, { skip: true });
+    const [
+        getRandomRecipe,
+        {
+            data: {
+                randomRecipe: {
+                    id
+                } = {}
+            } = {}
+        }
+    ] = useLazyQuery( GET_RANDOM_RECIPE, { fetchPolicy: 'no-cache' });
+
+    useEffect(() => {
+        if ( id ) {
+            history.push( `/recipe/${id}` );
+        }
+    }, [id]); // eslint-disable-line react-hooks/exhaustive-deps
 
     /**
      * Toggles popover
@@ -271,26 +279,7 @@ function Header () {
      * Redirects to a random recipe
      */
     async function onClickSurpriseMe() {
-        try {
-            const {
-                data: {
-                    randomRecipe: {
-                        id
-                    } = {}
-                } = {}
-            } = await getRandomRecipe();
-
-            if ( id ) {
-                history.push( `/recipe/${id}` );
-            }
-        } catch ( error ) {
-            setSnackbar({
-                open: true,
-                autoHideDuration: 3000,
-                message: 'Something went wrong. Try again later.',
-                type: 'error'
-            });
-        }
+        getRandomRecipe();
     }
 
     /**
@@ -305,22 +294,6 @@ function Header () {
                 history.push( route );
             }
         }
-    }
-
-    /**
-     * Snack bar close event handler
-     * @param {Object} event
-     * @param {String} reason
-     */
-    function handleSnackbarClose( event, reason ) {
-        if ( reason === 'clickaway' ) {
-            return;
-        }
-
-        setSnackbar({
-            open: false,
-            message: ''
-        });
     }
 
     const headerProps = {
@@ -340,24 +313,6 @@ function Header () {
                     : <DesktopHeader { ...headerProps } />
                 }
             </StyledToolbar>
-
-            <Snackbar
-                key={ snackbar.message }
-                anchorOrigin={{
-                    vertical: 'top',
-                    horizontal: 'right'
-                }}
-                open={ snackbar.open }
-                onClose={ handleSnackbarClose }
-                ContentProps={{
-                    'aria-describedby': 'message-id',
-                    style: snackbar.type === 'error' ? {
-                        backgroundColor: '#ff5252'
-                    } : {}
-                }}
-                message={ <span id="message-id">{ snackbar.message }</span> }
-                autoHideDuration={ snackbar.autoHideDuration || null }
-            />
         </StyledAppBar>
     );
 }
