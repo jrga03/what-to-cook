@@ -99,6 +99,10 @@ function Recipe() {
         setLikedRecipes( Array.from( likedRecipesSet ));
     }
 
+    function handleEditClick() {
+        history.push( `/recipe/${id}/edit` );
+    }
+
     function handleSelectTab( event, tabIndex ) {
         setSelectedTab( tabIndex );
     }
@@ -175,7 +179,7 @@ function Recipe() {
                                     horizontal: 'center',
                                 }}
                             >
-                                <Button>
+                                <Button onClick={ handleEditClick }>
                                     Edit
                                 </Button>
                             </Popover>

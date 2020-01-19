@@ -3,7 +3,8 @@ import PropTypes from 'prop-types';
 import {
     EditorState,
     RichUtils,
-    AtomicBlockUtils
+    AtomicBlockUtils,
+    convertFromRaw
 } from 'draft-js';
 import Editor, { composeDecorators } from 'draft-js-plugins-editor'
 import createImagePlugin from 'draft-js-image-plugin';
@@ -12,9 +13,7 @@ import createFocusPlugin from 'draft-js-focus-plugin';
 import createResizeablePlugin from 'draft-js-resizeable-plugin';
 import createBlockDndPlugin from 'draft-js-drag-n-drop-plugin';
 
-/* eslint-disable import/no-unresolved */
-import { upload, compressImage } from 'utils/fileHelper';
-/* eslint-enable import/no-unresolved */
+import { upload, compressImage } from '../../../utils/fileHelper';
 
 import BlockTypeButtons from '../BlockTypeButtons';
 import InlineStyleButtons from '../InlineStyleButtons';
@@ -231,6 +230,15 @@ class EditorWithPlugins extends PureComponent {
 
         this.setState( newState );
         return valid;
+    }
+
+    /**
+     * Sets Editor state from raw
+     * @param {object} raw
+     */
+    setEditorStateFromRaw = ( raw ) => {
+        const editorState = EditorState.createWithContent( convertFromRaw( raw ));
+        this.setState({ editorState });
     }
 
     render() {

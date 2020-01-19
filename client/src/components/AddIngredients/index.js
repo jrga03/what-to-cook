@@ -63,7 +63,8 @@ AddedIngredients.propTypes = {
     selectedIngredients: PropTypes.arrayOf(
         PropTypes.shape({
             quantity: PropTypes.string,
-            ingredient: PropTypes.string
+            ingredient: PropTypes.string,
+            name: PropTypes.string
         })
     ).isRequired,
     onRemoveIngredient: PropTypes.func.isRequired

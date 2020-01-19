@@ -9,7 +9,6 @@ import { toHSL } from '../../../utils/stringToColor';
  * Multi value component
  */
 function MultiValue( props ) {
-    console.log( props );
     return (
         <Chip
             tabIndex={ -1 }

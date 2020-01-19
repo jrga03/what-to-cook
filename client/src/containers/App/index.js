@@ -79,7 +79,7 @@ function App () {
                             <Redirect to="/categories" />
                         </Route>
                         <Route exact path={ [ '/categories', '/ingredients' ] } component={ Dashboard } />
-                        <Route exact path="/recipe/add" component={ RecipeForm } />
+                        <Route exact path={ [ '/recipe/add', '/recipe/:id/edit' ] } component={ RecipeForm } />
                         <Route exact path="/recipes" component={ Recipes } />
                         <Route exact path="/recipe/:id" component={ RecipeDetails } />
                         <Route path={[ '/recipe', '/recipe/*/*' ]}>

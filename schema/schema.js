@@ -246,7 +246,7 @@ const mutation = new GraphQLObjectType({
             type: RecipeType,
             args: {
                 id: { type: GraphQLNonNull( GraphQLID ) },
-                name: { type: GraphQLString },
+                name: { type: GraphQLNonNull( GraphQLString ) },
                 description: { type: GraphQLString },
                 photo: { type: GraphQLNonNull( GraphQLString ) },
                 ingredients: { type: GraphQLList( RecipeIngredientInput ) },

@@ -1,7 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { useQuery, useMutation } from '@apollo/react-hooks';
 import { gql } from 'apollo-boost';
-import { useHistory } from 'react-router-dom';
+import { useHistory, useParams } from 'react-router-dom';
 import { convertToRaw } from 'draft-js';
 import TextField from '@material-ui/core/TextField';
 import Typography from '@material-ui/core/Typography';
@@ -25,16 +25,43 @@ import {
     TextFieldWrapper
 } from './styles';
 
-const GET_OPTIONS = gql`
+const GET_OPTIONS = `
+    ingredients {
+        id,
+        name
+    },
+    tags {
+        id,
+        name
+    }
+`;
+
+const GET_OPTIONS_TAG = gql`
     {
-        ingredients {
-            id,
+        ${GET_OPTIONS}
+    }
+`;
+
+const GET_RECIPE_AND_OPTIONS = gql`
+    query recipe( $id: ID! ) {
+        recipe( id: $id ) {
             name
-        },
-        tags {
-            id,
-            name
+            description
+            photo
+            instructions
+            ingredients {
+                quantity
+                ingredient {
+                    id
+                    name
+                }
+            }
+            tags {
+                id
+                name
+            }
         }
+        ${GET_OPTIONS}
     }
 `;
 
@@ -63,12 +90,40 @@ const SAVE_RECIPE = gql`
     }
 `;
 
+const EDIT_RECIPE = gql`
+    mutation editRecipe(
+        $id: ID!,
+        $name: String!,
+        $description: String,
+        $photo: String!,
+        $ingredients: [RecipeIngredientInput],
+        $newIngredients: [NewIngredientInput],
+        $instructions: String!,
+        $tags: [ID],
+        $newTags: [String]) {
+            editRecipe(
+                id: $id,
+                name: $name,
+                description: $description,
+                photo: $photo,
+                ingredients: $ingredients,
+                newIngredients: $newIngredients,
+                instructions: $instructions,
+                tags: $tags,
+                newTags: $newTags
+            ) {
+                id
+            }
+    }
+`;
+
 /**
  *
  * Recipe Form Component
  *
  */
 function RecipeForm() {
+    const { id } = useParams();
     const history = useHistory();
     const headerHeight = useHeaderHeight();
 
@@ -89,11 +144,43 @@ function RecipeForm() {
     const [ editorUploading, setEditorUploading ] = useState( false );
     const [ saving, setSaving ] = useState( false );
 
-    const { data, loading } = useQuery( GET_OPTIONS );
+    const { data, loading } = useQuery( id ? GET_RECIPE_AND_OPTIONS : GET_OPTIONS_TAG, {
+        variables: { id },
+        fetchPolicy: 'no-cache'
+    });
     const [saveRecipe] = useMutation( SAVE_RECIPE );
+    const [editRecipe] = useMutation( EDIT_RECIPE );
 
     useEffect(() => {
         if ( !loading && data ) {
+            if ( data.recipe ) {
+                const {
+                    name,
+                    description,
+                    photo,
+                    ingredients,
+                    tags,
+                    instructions
+                } = data.recipe;
+
+                setName( name );
+                descriptionRef.current.value = description;
+                const fileExtRegex = new RegExp( /.\w{1,}$/ )
+                const [fileExtension] = photo.match( fileExtRegex );
+                setPhotoName( `${name}${fileExtension}` );
+                setPhotoUrl( photo );
+                setIngredients( ingredients.map(({ quantity, ingredient }) => ({
+                    quantity,
+                    ingredient: ingredient.id,
+                    name: startCase( ingredient.name )
+                })) );
+                setTags( tags.map(( tag ) => ({
+                    value: tag.id,
+                    label: startCase( tag.name )
+                })) );
+                editorRef.current.setEditorStateFromRaw( JSON.parse( instructions ));
+            }
+
             setIngredientOptions( data.ingredients.map(( ingredient ) => ({
                 label: startCase( ingredient.name ),
                 value: ingredient.id
@@ -280,7 +367,11 @@ function RecipeForm() {
             });
 
             try {
-                await saveRecipe({ variables: payload });
+                if ( id ) {
+                    await editRecipe({ variables: { id, ...payload } });
+                } else {
+                    await saveRecipe({ variables: payload });
+                }
                 history.push( '/recipes' );
             } catch ( error ) {
                 setSnackbar({
