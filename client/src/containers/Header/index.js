@@ -1,6 +1,8 @@
 import React, { forwardRef, useState, useRef } from 'react';
 import PropTypes from 'prop-types';
 import { NavLink, useLocation, useHistory, useRouteMatch } from 'react-router-dom';
+import { useQuery } from '@apollo/react-hooks';
+import { gql } from 'apollo-boost';
 import SwipeableDrawer from '@material-ui/core/SwipeableDrawer';
 import Popper from '@material-ui/core/Popper';
 import Grow from '@material-ui/core/Grow';
@@ -11,6 +13,7 @@ import Button from '@material-ui/core/Button';
 import IconButton from '@material-ui/core/IconButton';
 import Typography from '@material-ui/core/Typography';
 import Collapse from '@material-ui/core/Collapse';
+import Snackbar from '@material-ui/core/Snackbar';
 import MenuIcon from '@material-ui/icons/Menu';
 import ExpandMore from '@material-ui/icons/ExpandMore';
 import ExpandLess from '@material-ui/icons/ExpandLess';
@@ -26,6 +29,14 @@ import {
     Container,
     DrawerContentContainer
 } from './styles';
+
+const GET_RANDOM_RECIPE = gql`
+    query {
+        randomRecipe {
+            id
+        }
+    }
+`;
 
 /**
  * Menu List component
@@ -71,10 +82,9 @@ function MobileHeader ({
     open,
     onClickSurpriseMe,
     recipesButtonRef,
-    recipeListToggle
+    recipeListToggle,
+    redirectTo
 }) {
-    const location = useLocation();
-    const history = useHistory();
     const [ openDrawer, toggleDrawer ] = useState( false );
 
     /**
@@ -89,17 +99,9 @@ function MobileHeader ({
         return () => toggleDrawer(( prevStatus ) => !prevStatus );
     }
 
-    /**
-     * Handles redirecting of route
-     * @param {string} route - Route URL
-     */
-    function handleRedirectRoute( route ) {
-        return function() {
-            if ( location.pathname !== route ) {
-                history.push( route );
-            }
-            toggleDrawer( false );
-        }
+    function handleSurpriseMeClick() {
+        toggleDrawer( false );
+        onClickSurpriseMe();
     }
 
     return (
@@ -117,7 +119,7 @@ function MobileHeader ({
                     <Typography variant="h6" noWrap>
                         What To Cook
                     </Typography>
-                    <Button onClick={ onClickSurpriseMe }>
+                    <Button onClick={ handleSurpriseMeClick }>
                         Surprise Me!
                     </Button>
                     <Button
@@ -132,13 +134,13 @@ function MobileHeader ({
                     <Collapse in={ open } timeout="auto">
                         <MenuList onClickItem={ handleToggleDrawer( false ) } />
                     </Collapse>
-                    <Button onClick={ handleRedirectRoute( '/categories' ) }>
+                    <Button onClick={ redirectTo( '/categories', handleToggleDrawer( false ) ) }>
                         Categories
                     </Button>
-                    <Button onClick={ handleRedirectRoute( '/ingredients' ) }>
+                    <Button onClick={ redirectTo( '/ingredients', handleToggleDrawer( false ) ) }>
                         Ingredients
                     </Button>
-                    <Button onClick={ handleRedirectRoute( '/recipe/add' ) }>
+                    <Button onClick={ redirectTo( '/recipe/add', handleToggleDrawer( false ) ) }>
                         Add a Recipe
                     </Button>
                     <div />
@@ -152,7 +154,8 @@ MobileHeader.propTypes = {
     open: PropTypes.bool.isRequired,
     onClickSurpriseMe: PropTypes.func.isRequired,
     recipesButtonRef: PropTypes.object.isRequired,
-    recipeListToggle: PropTypes.func.isRequired
+    recipeListToggle: PropTypes.func.isRequired,
+    redirectTo: PropTypes.func.isRequired
 };
 
 /**
@@ -163,24 +166,11 @@ function DesktopHeader ({
     onClickSurpriseMe,
     recipesButtonRef,
     recipeListToggle,
-    recipeListClose
+    recipeListClose,
+    redirectTo
 }) {
-    const location = useLocation();
-    const history = useHistory();
     const matchAddRecipe = useRouteMatch( '/recipe/add' );
     const isAddRecipe = matchAddRecipe && matchAddRecipe.isExact;
-
-    /**
-     * Handles redirecting of route
-     * @param {string} route - Route URL
-     */
-    function handleRedirectRoute( route ) {
-        return function() {
-            if ( location.pathname !== route ) {
-                history.push( route );
-            }
-        }
-    }
 
     return (
         <>
@@ -224,7 +214,7 @@ function DesktopHeader ({
                 <div />
             </Container>
             { !isAddRecipe && (
-                <Button onClick={ handleRedirectRoute( '/recipe/add' ) }>
+                <Button onClick={ redirectTo( '/recipe/add' ) }>
                     Add a Recipe
                 </Button>
             ) }
@@ -237,15 +227,28 @@ DesktopHeader.propTypes = {
     onClickSurpriseMe: PropTypes.func.isRequired,
     recipesButtonRef: PropTypes.object.isRequired,
     recipeListToggle: PropTypes.func.isRequired,
-    recipeListClose: PropTypes.func.isRequired
+    recipeListClose: PropTypes.func.isRequired,
+    redirectTo: PropTypes.func.isRequired
 };
 
 /**
  * Header componnent
  */
 function Header () {
+    const location = useLocation();
+    const history = useHistory();
+
     const [ open, setOpen ] = useState( false );
+    const [ snackbar, setSnackbar ] = useState({
+        open: false,
+        message: ''
+    });
+
     const anchorRef = useRef( null );
+
+    const {
+        refetch: getRandomRecipe
+    } = useQuery( GET_RANDOM_RECIPE, { skip: true });
 
     /**
      * Toggles popover
@@ -261,18 +264,72 @@ function Header () {
         if ( anchorRef.current && anchorRef.current.contains( event.target )) {
             return;
         }
-
         setOpen( false );
     }
 
-    const onClickSurpriseMe = () => console.log( 'SURPRISE!' );
+    /**
+     * Redirects to a random recipe
+     */
+    async function onClickSurpriseMe() {
+        try {
+            const {
+                data: {
+                    randomRecipe: {
+                        id
+                    } = {}
+                } = {}
+            } = await getRandomRecipe();
+
+            if ( id ) {
+                history.push( `/recipe/${id}` );
+            }
+        } catch ( error ) {
+            setSnackbar({
+                open: true,
+                autoHideDuration: 3000,
+                message: 'Something went wrong. Try again later.',
+                type: 'error'
+            });
+        }
+    }
+
+    /**
+     * Handles redirecting of route
+     * @param {string} route - Route URL
+     * @param {function} callback
+     */
+    function handleRedirectRoute( route, callback ) {
+        return function() {
+            callback && callback();
+            if ( location.pathname !== route ) {
+                history.push( route );
+            }
+        }
+    }
+
+    /**
+     * Snack bar close event handler
+     * @param {Object} event
+     * @param {String} reason
+     */
+    function handleSnackbarClose( event, reason ) {
+        if ( reason === 'clickaway' ) {
+            return;
+        }
+
+        setSnackbar({
+            open: false,
+            message: ''
+        });
+    }
 
     const headerProps = {
         open,
         onClickSurpriseMe,
         recipesButtonRef: anchorRef,
         recipeListToggle: handleToggle,
-        recipeListClose: handleClose
+        recipeListClose: handleClose,
+        redirectTo: handleRedirectRoute
     };
 
     return (
@@ -283,6 +340,24 @@ function Header () {
                     : <DesktopHeader { ...headerProps } />
                 }
             </StyledToolbar>
+
+            <Snackbar
+                key={ snackbar.message }
+                anchorOrigin={{
+                    vertical: 'top',
+                    horizontal: 'right'
+                }}
+                open={ snackbar.open }
+                onClose={ handleSnackbarClose }
+                ContentProps={{
+                    'aria-describedby': 'message-id',
+                    style: snackbar.type === 'error' ? {
+                        backgroundColor: '#ff5252'
+                    } : {}
+                }}
+                message={ <span id="message-id">{ snackbar.message }</span> }
+                autoHideDuration={ snackbar.autoHideDuration || null }
+            />
         </StyledAppBar>
     );
 }
