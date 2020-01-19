@@ -76,9 +76,30 @@ function Recipes() {
     } = useQuery( GET_RECIPES, { variables, displayName: 'getRecipesQuery' });
 
     const {
-        data: { tags } = {},
+        data: { tags: tagsData = [] } = {},
         loading: tagsLoading
     } = useQuery( GET_TAGS, { displayName: 'getTagsQuery' });
+
+    let tags = [];
+    if ( tagsData.length > 0 ) {
+        const categorizedTags = tagsData.reduce(( filtered, tag ) => {
+            if ( categories.has( tag.name )) {
+                filtered.first.push( tag );
+            } else {
+                filtered.last.push( tag );
+            }
+
+            return filtered;
+        }, {
+            first: [],
+            last: []
+        });
+
+        tags = [
+            ...categorizedTags.first,
+            ...categorizedTags.last
+        ];
+    }
 
     const windowSize = useWindowSize();
     const headerHeight = useHeaderHeight();
@@ -88,7 +109,7 @@ function Recipes() {
      */
     useEffect(
         () => {
-            if ( tags && categories.size > 0 ) {
+            if ( tags.length > 0 && categories.size > 0 ) {
                 const selectedCategories = tags.reduce(( selected, { name, id }) => {
                     if ( categories.has( name ) ) {
                         selected.push( id );
@@ -99,7 +120,7 @@ function Recipes() {
                 setSelectedTags( new Set( selectedCategories ) )
             }
         },
-        [tags] // eslint-disable-line react-hooks/exhaustive-deps
+        [tags.length] // eslint-disable-line react-hooks/exhaustive-deps
     );
 
     /**
