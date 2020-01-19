@@ -2,7 +2,7 @@ import React from 'react';
 import PropTypes from 'prop-types';
 
 import { RECIPE_CARD_GUTTER_SIZE } from '../../../constants';
-import RecipeCard from '../../../components/RecipeCard';
+import RecipeCard from '../../RecipeCard';
 
 /**
  * RecipeCardItem component

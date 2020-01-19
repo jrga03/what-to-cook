@@ -1,35 +1,27 @@
-import React, { forwardRef, useState, useEffect, memo } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Helmet } from 'react-helmet';
-import { useLocation, useHistory } from 'react-router-dom';
+import { useLocation } from 'react-router-dom';
 import { useQuery } from '@apollo/react-hooks';
 import { gql } from 'apollo-boost';
-import { FixedSizeList as List, areEqual } from 'react-window';
 import Input from '@material-ui/core/Input';
 import InputAdornment from '@material-ui/core/InputAdornment';
 import Search from '@material-ui/icons/Search';
-import Typography from '@material-ui/core/Typography';
-import Button from '@material-ui/core/Button';
-import Fade from '@material-ui/core/Fade';
 
-import { RECIPE_CARD_GUTTER_SIZE, LIKED_RECIPES } from '../../constants';
 import Loader from '../../components/Loader';
+import RecipeList from '../../components/RecipeList';
 
 import {
     useWindowSize,
     useHeaderHeight,
-    useDebounce,
-    useLocalStorage
+    useDebounce
 } from '../../utils/hooks';
 
-import RecipeCardItem from './RecipeCardItem';
 import TagList from './TagList';
 
 import { CenterItemWrapper, Wrapper } from './styles';
 
-const MemoizedRecipeCardItem = memo( RecipeCardItem, areEqual );
-
 const GET_RECIPES = gql`
-    query recipes( $search: String, $tags: [String!] ) {
+    query recipes( $search: String, $tags: [ID!] ) {
         recipes( search: $search, tags: $tags ) {
             id
             name
@@ -59,29 +51,14 @@ const GET_TAGS = gql`
     }
 `;
 
-const innerElementType = forwardRef(({ style, ...rest }, ref) => (
-    <div
-        ref={ ref }
-        style={{
-            ...style,
-            paddingTop: RECIPE_CARD_GUTTER_SIZE
-        }}
-        { ...rest }
-    />
-));
-
 /**
  * Recipes component
  */
 function Recipes() {
     const { search } = useLocation();
-    const history = useHistory();
     const urlQuery = new URLSearchParams( search );
     const category = urlQuery.get( 'category' );
     const categories = new Set( category ? category.split( ',' ) : []);
-
-    const [likedRecipes] = useLocalStorage( LIKED_RECIPES, [] );
-    const likedRecipesSet = new Set( likedRecipes );
 
     const [ searchTerm, setSearchTerm ] = useState( '' );
     const [ selectedTags, setSelectedTags ] = useState( new Set([]));
@@ -126,15 +103,6 @@ function Recipes() {
     );
 
     /**
-     * Fetches ID for list item
-     * @param {number} index - Item index
-     * @param {object[]} data - Item list
-     */
-    function getKey( index, recipes ) {
-        return recipes[ index ].id;
-    }
-
-    /**
      * On change handler for search input
      * @param {SyntethicEvent} event
      */
@@ -163,20 +131,6 @@ function Recipes() {
         }
     }
 
-    /**
-     * Returns function that redirects page to provided route
-     * @param {string} to - Route path
-     * @returns {function}
-     */
-    function handleRouteChange( to ) {
-        return function() {
-            history.push( to );
-        }
-    }
-
-    const listWidth = Math.min( windowSize.width, 600 ) - ( RECIPE_CARD_GUTTER_SIZE * 2 );
-    const computedItemSize = listWidth * 0.4; // one-third of list width
-    const itemSize = Math.min( computedItemSize, 150 );
     const SEARCH_INPUT_HEIGHT = 52;
     const TAGS_HEIGHT = 36;
     const listHeight = windowSize.height - headerHeight - SEARCH_INPUT_HEIGHT - TAGS_HEIGHT;
@@ -214,40 +168,11 @@ function Recipes() {
                     <Loader />
                 </CenterItemWrapper>
             ) : (
-                recipes.length === 0 ? (
-                    <CenterItemWrapper height={ listHeight }>
-                        <Typography variant="body2" paragraph>
-                            No recipe available
-                        </Typography>
-                        <Button
-                            color="primary"
-                            variant="outlined"
-                            onClick={ handleRouteChange( '/recipe/add' ) }
-                        >
-                            Add a Recipe
-                        </Button>
-                    </CenterItemWrapper>
-                ) : (
-                    <Fade in>
-                        <List
-                            height={ listHeight }
-                            width={ listWidth }
-                            itemCount={ recipes.length }
-                            itemSize={ itemSize }
-                            itemData={ recipes }
-                            itemKey={ getKey }
-                            innerElementType={ innerElementType }
-                        >
-                            { ( props ) => (
-                                <MemoizedRecipeCardItem
-                                    { ...props }
-                                    likedRecipes={ likedRecipesSet }
-                                />
-                            ) }
-                        </List>
-                    </Fade>
-                )
-            )}
+                <RecipeList
+                    listHeight={ listHeight }
+                    recipes={ recipes }
+                />
+            ) }
         </Wrapper>
     );
 }
