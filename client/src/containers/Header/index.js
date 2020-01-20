@@ -13,10 +13,12 @@ import Button from '@material-ui/core/Button';
 import IconButton from '@material-ui/core/IconButton';
 import Typography from '@material-ui/core/Typography';
 import Collapse from '@material-ui/core/Collapse';
+import Snackbar from '@material-ui/core/Snackbar';
 import MenuIcon from '@material-ui/icons/Menu';
 import ExpandMore from '@material-ui/icons/ExpandMore';
 import ExpandLess from '@material-ui/icons/ExpandLess';
 import toLower from 'lodash/toLower';
+import get from 'lodash/get';
 import { isMobileOnly } from 'react-device-detect';
 
 import { CATEGORIES } from '../../constants';
@@ -238,25 +240,32 @@ function Header () {
     const history = useHistory();
 
     const [ open, setOpen ] = useState( false );
+    const [ snackbar, setSnackbar ] = useState({
+        open: false,
+        message: ''
+    });
 
     const anchorRef = useRef( null );
 
-    const [
-        getRandomRecipe,
-        {
-            data: {
-                randomRecipe: {
-                    id
-                } = {}
-            } = {}
-        }
-    ] = useLazyQuery( GET_RANDOM_RECIPE, { fetchPolicy: 'no-cache' });
+    const [ getRandomRecipe, { data }] = useLazyQuery( GET_RANDOM_RECIPE, { fetchPolicy: 'no-cache' });
+
 
     useEffect(() => {
-        if ( id ) {
-            history.push( `/recipe/${id}` );
+        if ( data ) {
+            const id = get( data, 'randomRecipe.id' );
+
+            if ( id ) {
+                history.push( `/recipe/${id}` );
+            } else {
+                setSnackbar({
+                    open: true,
+                    autoHideDuration: 3000,
+                    message: 'No recipes available',
+                    type: 'error'
+                });
+            }
         }
-    }, [id]); // eslint-disable-line react-hooks/exhaustive-deps
+    }, [data]); // eslint-disable-line react-hooks/exhaustive-deps
 
     /**
      * Toggles popover
@@ -296,6 +305,22 @@ function Header () {
         }
     }
 
+    /**
+     * Snack bar close event handler
+     * @param {Object} event
+     * @param {String} reason
+     */
+    function handleSnackbarClose( event, reason ) {
+        if ( reason === 'clickaway' ) {
+            return;
+        }
+
+        setSnackbar({
+            open: false,
+            message: ''
+        });
+    }
+
     const headerProps = {
         open,
         onClickSurpriseMe,
@@ -313,6 +338,24 @@ function Header () {
                     : <DesktopHeader { ...headerProps } />
                 }
             </StyledToolbar>
+
+            <Snackbar
+                key={ snackbar.message }
+                anchorOrigin={{
+                    vertical: 'top',
+                    horizontal: 'center'
+                }}
+                open={ snackbar.open }
+                onClose={ handleSnackbarClose }
+                ContentProps={{
+                    'aria-describedby': 'message-id',
+                    style: snackbar.type === 'error' ? {
+                        backgroundColor: '#ff5252'
+                    } : {}
+                }}
+                message={ <span id="message-id">{ snackbar.message }</span> }
+                autoHideDuration={ snackbar.autoHideDuration || null }
+            />
         </StyledAppBar>
     );
 }
