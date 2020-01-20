@@ -82,6 +82,7 @@ function Recipes() {
 
     let tags = [];
     if ( tagsData.length > 0 ) {
+        const categories = new Set( category ? category.split( ',' ) : []);
         const categorizedTags = tagsData.reduce(( filtered, tag ) => {
             if ( categories.has( tag.name )) {
                 filtered.first.push( tag );
@@ -109,7 +110,8 @@ function Recipes() {
      */
     useEffect(
         () => {
-            if ( tags.length > 0 && categories.size > 0 ) {
+            const categories = new Set( category ? category.split( ',' ) : []);
+            if ( tags.length > 0 ) {
                 const selectedCategories = tags.reduce(( selected, { name, id }) => {
                     if ( categories.has( name ) ) {
                         selected.push( id );
@@ -120,7 +122,7 @@ function Recipes() {
                 setSelectedTags( new Set( selectedCategories ) )
             }
         },
-        [tags.length] // eslint-disable-line react-hooks/exhaustive-deps
+        [ tags.length, category ] // eslint-disable-line react-hooks/exhaustive-deps
     );
 
     /**
