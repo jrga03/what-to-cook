@@ -31,17 +31,24 @@ export const StyledToolbar = styled( Toolbar )`
     width: 100vw;
     padding-right: 5px;
     padding-left: 5px;
+    justify-content: space-between;
 
     & > a:first-of-type {
         padding-left: 10px;
         color: white;
     }
 
-    button {
+    .MuiButtonBase-root, .MuiTypography-root {
         color: #fff;
     }
 
     ${linkStyles}
+
+    .left {
+        display: flex;
+        flex-direction: row;
+        align-items: center;
+    }
 `;
 
 export const StyledMenuList = styled( MenuList )`

@@ -15,6 +15,7 @@ import Typography from '@material-ui/core/Typography';
 import Collapse from '@material-ui/core/Collapse';
 import Snackbar from '@material-ui/core/Snackbar';
 import MenuIcon from '@material-ui/icons/Menu';
+import Search from '@material-ui/icons/Search';
 import ExpandMore from '@material-ui/icons/ExpandMore';
 import ExpandLess from '@material-ui/icons/ExpandLess';
 import toLower from 'lodash/toLower';
@@ -107,14 +108,21 @@ function MobileHeader ({
 
     return (
         <>
-            <IconButton color="inherit" aria-label="Menu" onClick={ handleToggleDrawer( true ) }>
-                <MenuIcon />
-            </IconButton>
-            <NavLink exact to="/">
-                <Typography variant="h6" noWrap>
-                    What To Cook
-                </Typography>
-            </NavLink>
+            <div className="left">
+                <IconButton color="inherit" aria-label="Menu" onClick={ handleToggleDrawer( true ) }>
+                    <MenuIcon />
+                </IconButton>
+                <NavLink exact to="/">
+                    <Typography variant="h6" noWrap>
+                        What To Cook
+                    </Typography>
+                </NavLink>
+            </div>
+            <div className="right">
+                <IconButton color="inherit" aria-label="Search" onClick={ redirectTo( '/search', handleToggleDrawer( false ) ) }>
+                    <Search />
+                </IconButton>
+            </div>
             <SwipeableDrawer open={ openDrawer } onOpen={ handleToggleDrawer( true ) } onClose={ handleToggleDrawer( false ) }>
                 <DrawerContentContainer>
                     <Typography variant="h6" noWrap>
