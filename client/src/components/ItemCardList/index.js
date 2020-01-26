@@ -1,4 +1,4 @@
-import React, { useCallback } from 'react';
+import React from 'react';
 import PropTypes from 'prop-types';
 import GridListTile from '@material-ui/core/GridListTile';
 
@@ -14,27 +14,29 @@ function ItemCardList({
     cellHeight,
     spacing,
     data,
-    onClickItem
+    onClickItem,
+    selectedIngredients
 }) {
     const cardWidth = 85 / cols;
 
-    // eslint-disable-next-line react-hooks/rules-of-hooks
-    const handleOnClickItem = ( id, index ) => useCallback(() => {
-        onClickItem( id, index );
-    }, [ id, index ]);
+    function handleOnClickItem( id ) {
+        return function() {
+            onClickItem( id );
+        }
+    }
 
     return (
         <StyledGridList cols={ cols } cellHeight={ cellHeight } spacing={ spacing }>
-            { data.map(({ id, label, image, imageTitle, selected }, index ) => (
+            { data.map(({ id, label, image, imageTitle }) => (
                 <GridListTile key={ id }>
                     <ItemCard
                         gridColumns={ cols }
                         label={ label }
                         image={ image }
                         imageTitle={ imageTitle }
-                        onClick={ handleOnClickItem( id, index ) }
+                        onClick={ handleOnClickItem( id ) }
                         width={ cardWidth }
-                        selected={ Boolean( selected ) }
+                        selected={ selectedIngredients.has( id ) }
                     />
                 </GridListTile>
             )) }
@@ -60,13 +62,15 @@ ItemCardList.propTypes = {
         imageTitle: PropTypes.string,
         selected: PropTypes.bool
     })),
-    onClickItem: PropTypes.func
+    onClickItem: PropTypes.func,
+    selectedIngredients: PropTypes.any // `Set` (not yet available in prop-types)
 }
 
 ItemCardList.defaultProps = {
     cellHeight: 'auto',
     spacing: 4,
-    onClickItem: () => { }
+    onClickItem: () => { },
+    selectedIngredients: new Set([])
 }
 
 export default ItemCardList;
