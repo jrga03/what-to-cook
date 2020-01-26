@@ -1,11 +1,13 @@
 import React, { useState, useEffect } from 'react';
 import { Helmet } from 'react-helmet';
-import { useLocation } from 'react-router-dom';
+import { useLocation, useHistory } from 'react-router-dom';
 import { useQuery } from '@apollo/react-hooks';
 import { gql } from 'apollo-boost';
 import Input from '@material-ui/core/Input';
 import InputAdornment from '@material-ui/core/InputAdornment';
+import Fab from '@material-ui/core/Fab';
 import Search from '@material-ui/icons/Search';
+import get from 'lodash/get';
 
 import Loader from '../../components/Loader';
 import RecipeList from '../../components/RecipeList';
@@ -16,13 +18,13 @@ import {
     useDebounce
 } from '../../utils/hooks';
 
-import TagList from './TagList';
+import ChipList from './ChipList';
 
 import { CenterItemWrapper, Wrapper } from './styles';
 
 const GET_RECIPES = gql`
-    query recipes( $search: String, $tags: [ID!] ) {
-        recipes( search: $search, tags: $tags ) {
+    query recipes( $search: String, $tags: [ID!], $ingredients: [ID!] ) {
+        recipes( search: $search, tags: $tags, ingredients: $ingredients ) {
             id
             name
             description
@@ -55,10 +57,18 @@ const GET_TAGS = gql`
  * Recipes component
  */
 function Recipes() {
-    const { search } = useLocation();
+    const {
+        search,
+        state,
+        pathname
+    } = useLocation();
+    const history = useHistory();
+
     const urlQuery = new URLSearchParams( search );
     const category = urlQuery.get( 'category' );
     const categories = new Set( category ? category.split( ',' ) : []);
+    const ingredients = get( state, 'ingredients', [] );
+    const selectedIngredients = get( state, 'selectedIngredients', []);
 
     const [ searchTerm, setSearchTerm ] = useState( '' );
     const [ selectedTags, setSelectedTags ] = useState( new Set([]));
@@ -67,7 +77,8 @@ function Recipes() {
 
     const variables = {
         search: debouncedSearchTerm || '',
-        tags: Array.from( selectedTags )
+        tags: Array.from( selectedTags ),
+        ingredients: Array.from( selectedIngredients )
     };
 
     const {
@@ -154,9 +165,17 @@ function Recipes() {
         }
     }
 
+    function goToIngredients() {
+        history.push( '/ingredients' );
+    }
+
+    const isSearch = new RegExp( '/search' ).test( pathname );
+
+    const hasIngredients = ingredients.length > 0;
     const SEARCH_INPUT_HEIGHT = 52;
     const TAGS_HEIGHT = 36;
-    const listHeight = windowSize.height - headerHeight - SEARCH_INPUT_HEIGHT - TAGS_HEIGHT;
+    const INGREDIENTS_HEIGHT = hasIngredients ? 58 : 0;
+    const listHeight = windowSize.height - headerHeight - SEARCH_INPUT_HEIGHT - TAGS_HEIGHT - INGREDIENTS_HEIGHT;
 
     return (
         <Wrapper>
@@ -179,10 +198,18 @@ function Recipes() {
             />
 
             { !tagsLoading && (
-                <TagList
-                    tags={ tags }
+                <ChipList
+                    type="tags"
+                    items={ tags }
                     selectedTags={ selectedTags }
                     onClickTag={ handleOnClickTag }
+                />
+            ) }
+
+            { hasIngredients && (
+                <ChipList
+                    type="ingredients"
+                    items={ ingredients }
                 />
             ) }
 
@@ -195,6 +222,13 @@ function Recipes() {
                     listHeight={ listHeight }
                     recipes={ recipes }
                 />
+            ) }
+
+            { isSearch && (
+                <Fab variant="extended" size="medium" onClick={ goToIngredients }>
+                    <Search />
+                    By Ingredient
+                </Fab>
             ) }
         </Wrapper>
     );

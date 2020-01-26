@@ -19,4 +19,10 @@ export const Wrapper = styled.div`
     .search-input {
         margin: 10px 0;
     }
+
+    .MuiFab-root {
+        position: fixed;
+        bottom: 8px;
+        right: 8px;
+    }
 `;
