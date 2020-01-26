@@ -2,7 +2,11 @@ import styled from 'styled-components';
 
 import { RECIPE_CARD_GUTTER_SIZE } from '../../../constants';
 
-const TagsWrapper = styled.div`
+export const Wrapper = styled.section`
+    width: 100%;
+`;
+
+export const ChipsWrapper = styled.div`
     width: calc( 100vw - ${RECIPE_CARD_GUTTER_SIZE * 2}px );
     white-space: nowrap;
     overflow: auto;
@@ -16,5 +20,3 @@ const TagsWrapper = styled.div`
         margin-right: 2px;
     }
 `;
-
-export default TagsWrapper;
