@@ -1,6 +1,9 @@
 import styled from 'styled-components';
 
-const Wrapper = styled.main`
+const CONTAINER_PADDING = 4;
+export const TOTAL_CONTAINER_PADDING = CONTAINER_PADDING * 2;
+
+export const Wrapper = styled.main`
     max-width: 960px;
     width: 100vw;
     height: 100%;
@@ -13,15 +16,24 @@ const Wrapper = styled.main`
         width: 100%;
     }
 
-    .MuiGridList-root {
-        padding: 3vw 4px;
-        margin: 0;
-        display: flex;
-        flex-direction: row;
-        flex-wrap: wrap;
-        align-items: center;
-        justify-content: flex-start;
+    .MuiSnackbarContent-root {
+        flex-grow: 0;
     }
 `;
 
-export default Wrapper;
+export const ContentWrapper = styled.div`
+    padding: ${CONTAINER_PADDING}px;
+
+    .MuiInput-root {
+        margin-bottom: 8px;
+    }
+
+    .MuiListItemIcon-root {
+        min-width: 0;
+    }
+
+    .list > ul {
+        margin: 0;
+        padding: 0;
+    }
+`;
