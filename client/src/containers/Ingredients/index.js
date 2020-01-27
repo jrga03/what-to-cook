@@ -6,7 +6,6 @@ import Fuse from 'fuse.js';
 import { FixedSizeList as List, areEqual } from 'react-window';
 import memoize from 'memoize-one';
 import Fade from '@material-ui/core/Fade';
-import CircularProgress from '@material-ui/core/CircularProgress';
 import Input from '@material-ui/core/Input';
 import InputAdornment from '@material-ui/core/InputAdornment';
 import Button from '@material-ui/core/Button';
@@ -20,6 +19,8 @@ import Check from '@material-ui/icons/Check';
 import startCase from 'lodash/startCase';
 
 import { useWindowSize, useHeaderHeight, useDebounce } from '../../utils/hooks';
+
+import Loader from '../../components/Loader';
 
 import {
     Wrapper,
@@ -184,7 +185,7 @@ function Ingredients() {
             { loading
                 ? (
                     <div className="loading">
-                        <CircularProgress size="15vw" />
+                        <Loader />
                     </div>
                 ) : (
                     <Fade in>
