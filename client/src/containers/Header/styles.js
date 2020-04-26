@@ -4,9 +4,9 @@ import Toolbar from '@material-ui/core/Toolbar';
 import MenuList from '@material-ui/core/MenuList';
 
 const linkStyles = css`
-    a {
+    a, li {
         text-decoration: none;
-        color: rgba(0, 0, 0, 0.87);
+        color: rgba(0, 0, 0, 0.87) !important;
     }
 
     .active {
