@@ -143,8 +143,9 @@ function RecipeForm() {
     const [ uploading, setUploading ] = useState( false );
     const [ editorUploading, setEditorUploading ] = useState( false );
     const [ saving, setSaving ] = useState( false );
+    const [ fetchingData, setFetchingData ] = useState( Boolean( id ));
 
-    const { data, loading } = useQuery( id ? GET_RECIPE_AND_OPTIONS : GET_OPTIONS_TAG, {
+    const { data, loading, error } = useQuery( id ? GET_RECIPE_AND_OPTIONS : GET_OPTIONS_TAG, {
         variables: { id },
         fetchPolicy: 'no-cache'
     });
@@ -190,6 +191,12 @@ function RecipeForm() {
                 label: startCase( tag.name ),
                 value: tag.id
             })))
+
+            setFetchingData( false );
+        }
+
+        if ( error ) {
+            history.goBack();
         }
     }, [loading]); // eslint-disable-line react-hooks/exhaustive-deps
 
@@ -449,7 +456,7 @@ function RecipeForm() {
                     error={ nameError }
                     helperText={ nameError && 'Required' }
                     margin="normal"
-                    disabled={ saving }
+                    disabled={ fetchingData || saving }
                     value={ name }
                     onChange={ onChangeName }
                     onBlur={ onBlurName }
@@ -464,7 +471,7 @@ function RecipeForm() {
                     multiline
                     rowsMax={ 4 }
                     margin="normal"
-                    disabled={ saving }
+                    disabled={ fetchingData || saving }
                     inputRef={ descriptionRef }
                 />
 
@@ -483,12 +490,12 @@ function RecipeForm() {
                         event.preventDefault();
                         [ 'Enter', ' ' ].includes( event.key ) && selectFile()
                     } }
-                    disabled={ saving || uploading }
+                    disabled={ fetchingData || saving || uploading }
                     InputProps={{
                         endAdornment: (
                             <IconButton
                                 size="small"
-                                disabled={ saving || uploading }
+                                disabled={ fetchingData || saving || uploading }
                                 color={ photoUrl ? 'secondary' : 'primary' }
                             >
                                 { photoUrl
@@ -519,7 +526,7 @@ function RecipeForm() {
 
                 <AddIngredients
                     isLoading={ loading }
-                    isDisabled={ saving }
+                    isDisabled={ fetchingData || saving }
                     ingredients={ ingredientOptions }
                     selectedIngredients={ ingredients }
                     onAddIngredientOption={ handleAddIngredientOption }
@@ -540,7 +547,7 @@ function RecipeForm() {
                         valueContainer: ( style ) => ({ ...style, paddingLeft: 0 })
                     }}
                     isLoading={ loading }
-                    isDisabled={ saving }
+                    isDisabled={ fetchingData || saving }
                 />
             </TextFieldWrapper>
 
@@ -553,7 +560,7 @@ function RecipeForm() {
             </TextFieldWrapper>
 
             <EditorWithPlugins
-                disabled={ saving }
+                disabled={ fetchingData || saving }
                 dispatchSnackbar={ dispatchSnackbar }
                 setUploading={ setEditorUploading }
                 ref={ editorRef }
@@ -564,7 +571,7 @@ function RecipeForm() {
                     onClick={ handleSave }
                     color="primary"
                     variant="contained"
-                    disabled={ saving }
+                    disabled={ fetchingData || saving }
                 >
                     Save
                 </Button>

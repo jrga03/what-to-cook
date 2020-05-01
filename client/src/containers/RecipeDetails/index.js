@@ -159,7 +159,7 @@ function Recipe() {
                     </CardMedia>
                     <StyledCardContent>
                         <Typography component="h6" variant="h6" color="textPrimary">
-                            { name } the quick brown fox jumps over the lazy dog
+                            { name }
                         </Typography>
                         <div className="action-wrapper">
                             <IconButton onClick={ handleLikeClick }>
