@@ -1,4 +1,5 @@
 import styled from 'styled-components';
+import CardContent from '@material-ui/core/CardContent';
 
 export const LoaderWrapper = styled.div`
     height: 100vh;
@@ -42,5 +43,17 @@ export const ContentWrapper = styled.div`
 
     .description {
         margin: 12px 0;
+    }
+`;
+
+export const StyledCardContent = styled( CardContent )`
+    && {
+        display: flex;
+        justify-content: space-between;
+
+        .action-wrapper {
+            display: flex;
+            align-items: flex-start;
+        }
     }
 `;

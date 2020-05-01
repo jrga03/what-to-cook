@@ -12,7 +12,6 @@ import { isIOS } from 'react-device-detect';
 import Typography from '@material-ui/core/Typography';
 import Card from '@material-ui/core/Card';
 import CardMedia from '@material-ui/core/CardMedia';
-import CardContent from '@material-ui/core/CardContent';
 import Button from '@material-ui/core/Button';
 import IconButton from '@material-ui/core/IconButton';
 import Popover from '@material-ui/core/Popover';
@@ -20,6 +19,7 @@ import Paper from '@material-ui/core/Paper';
 import Tabs from '@material-ui/core/Tabs';
 import Tab from '@material-ui/core/Tab';
 import Chip from '@material-ui/core/Chip';
+import Fab from '@material-ui/core/Fab';
 import ArrowBack from '@material-ui/icons/ArrowBack';
 import ArrowBackIos from '@material-ui/icons/ArrowBackIos';
 import Favorite from '@material-ui/icons/Favorite';
@@ -34,7 +34,7 @@ import Loader from '../../components/Loader';
 import { toHSL } from '../../utils/stringToColor';
 import { useLocalStorage } from '../../utils/hooks';
 
-import { LoaderWrapper, Wrapper, ContentWrapper } from './styles';
+import { LoaderWrapper, Wrapper, ContentWrapper, StyledCardContent } from './styles';
 import Ingredients from './Ingredients';
 
 const BindKeyboardSwipeableViews = bindKeyboard( SwipeableViews );
@@ -152,11 +152,16 @@ function Recipe() {
                         title={ name }
                     >
                         <div>
-                            <IconButton onClick={ handleBackClick }>
-                                { isIOS ? <ArrowBackIos /> : <ArrowBack /> }
-                            </IconButton>
+                            <Fab onClick={ handleBackClick } size="small">
+                                { isIOS ? <ArrowBackIos style={{ marginLeft: '8px' }} /> : <ArrowBack /> }
+                            </Fab>
                         </div>
-                        <div>
+                    </CardMedia>
+                    <StyledCardContent>
+                        <Typography component="h6" variant="h6" color="textPrimary">
+                            { name } the quick brown fox jumps over the lazy dog
+                        </Typography>
+                        <div className="action-wrapper">
                             <IconButton onClick={ handleLikeClick }>
                                 { likedRecipesSet.has( id )
                                     ? <Favorite style={{ fill: LIKE_FILL_COLOR }} />
@@ -184,12 +189,7 @@ function Recipe() {
                                 </Button>
                             </Popover>
                         </div>
-                    </CardMedia>
-                    <CardContent>
-                        <Typography component="h6" variant="h6" color="textPrimary">
-                            { name }
-                        </Typography>
-                    </CardContent>
+                    </StyledCardContent>
                 </Card>
 
                 <ContentWrapper>
