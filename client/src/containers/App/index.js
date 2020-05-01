@@ -76,7 +76,7 @@ function App () {
                 >
                     <Switch>
                         <Route exact path="/">
-                            <Redirect to="/categories" />
+                            <Redirect to="/recipes" />
                         </Route>
                         <Route exact path={ [ '/categories', '/ingredients' ] } component={ Dashboard } />
                         <Route exact path={ [ '/recipe/add', '/recipe/:id/edit' ] } component={ RecipeForm } />
